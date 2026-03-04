@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Dissection — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* ── POSTER HEADER ── */
+.paper-banner {
+  background: var(--navy);
+  border-bottom: 3px solid var(--rust);
+  padding: 3.5rem 4rem 3rem;
+  position: relative; overflow: hidden;
+}
+.paper-banner::before {
+  content: '"';
+  position: absolute; right: 3rem; top: -1rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22rem; line-height: 1;
+  color: rgba(255,255,255,0.025);
+  pointer-events: none;
+}
+.paper-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 1.2rem;
+}
+.paper-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 700; line-height: 1.15;
+  color: white; max-width: 820px;
+  margin-bottom: 1rem;
+}
+.paper-authors {
+  font-size: 0.88rem; color: rgba(255,255,255,0.55);
+  line-height: 1.7; max-width: 700px;
+}
+.paper-authors strong { color: rgba(255,255,255,0.9); }
+.paper-journal {
+  margin-top: 1.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em;
+}
+.paper-journal a { color: var(--gold); text-decoration: none; }
+
+/* ── STAT STRIP ── */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--ink); border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.ss-cell {
+  padding: 1.4rem 1.2rem; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.ss-cell:last-child { border-right: none; }
+.ss-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem; font-weight: 700;
+  color: white; line-height: 1;
+}
+.ss-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+  margin-top: 0.3rem;
+}
+.ss-num.gold { color: var(--gold); }
+.ss-num.teal { color: #76d7c4; }
+.ss-num.rust { color: #f08080; }
+
+/* ── SECTION STRUCTURE ── */
+.dissect-section {
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 0;
+}
+.ds-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--ink-ghost);
+  margin-bottom: 0.6rem;
+}
+.ds-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--navy); line-height: 1.15;
+  margin-bottom: 1.2rem;
+}
+
+/* ── TWO-TONE LAYOUT ── */
+.split-layout {
+  display: grid; grid-template-columns: 1.2fr 1fr;
+  gap: 3rem; align-items: start;
+}
+.split-layout.rev { grid-template-columns: 1fr 1.2fr; }
+
+/* ── QUOTE BOX ── */
+.paper-quote {
+  border-left: 3px solid var(--rust);
+  background: rgba(181,69,27,0.06);
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--ink-faint);
+  line-height: 1.7;
+}
+.paper-quote cite {
+  display: block; margin-top: 0.5rem;
+  font-style: normal; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.1em;
+  color: var(--ink-ghost); text-transform: uppercase;
+}
+
+/* ── MODEL SPEC BOX ── */
+.model-spec {
+  background: var(--ink); color: #ccc;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem; padding: 1.5rem 1.75rem;
+  line-height: 2.1; margin: 1.25rem 0;
+}
+.model-spec .ms-c  { color: #555; }
+.model-spec .ms-k  { color: #76d7c4; }
+.model-spec .ms-v  { color: #f9c74f; }
+.model-spec .ms-s  { color: #f08080; }
+.model-spec .ms-ok { color: #68d391; }
+
+/* ── RESULT TABLE ── */
+.res-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.83rem; margin: 1.25rem 0;
+}
+.res-table th {
+  background: var(--navy); color: white;
+  padding: 0.55rem 0.9rem; text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.res-table td {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-faint);
+  vertical-align: top;
+}
+.res-table tr:hover td { background: var(--paper-dark); }
+.badge-sig  { background: rgba(26,107,92,0.15); color: var(--teal); font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.15rem 0.45rem; display:inline-block; }
+.badge-ns   { background: rgba(181,69,27,0.1);  color: var(--rust); font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.15rem 0.45rem; display:inline-block; }
+.badge-lang { background: rgba(26,39,68,0.1); color: var(--navy); font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:0.15rem 0.45rem; display:inline-block; }
+
+/* ── DESIGN DIAGRAM ── */
+.design-fig {
+  background: white; border: 1px solid var(--border);
+  padding: 1.25rem; margin: 1.25rem 0;
+}
+.design-fig canvas { display: block; width: 100%; }
+.design-caption {
+  font-size: 0.78rem; color: var(--ink-ghost);
+  font-style: italic; margin-top: 0.75rem;
+  padding-top: 0.75rem; border-top: 1px solid var(--border);
+  line-height: 1.55;
+}
+
+/* ── CRITIQUE GRID ── */
+.crit-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border); margin: 1.5rem 0;
+}
+.crit-cell { background: white; padding: 1.4rem; }
+.crit-cell.strength { border-top: 3px solid var(--teal); }
+.crit-cell.limit    { border-top: 3px solid var(--rust); }
+.crit-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.15em;
+  text-transform: uppercase; margin-bottom: 0.75rem;
+}
+.crit-cell.strength .crit-head { color: var(--teal); }
+.crit-cell.limit    .crit-head { color: var(--rust); }
+.crit-list { list-style: none; padding: 0; }
+.crit-list li {
+  font-size: 0.87rem; color: var(--ink-faint);
+  padding: 0.4rem 0; border-bottom: 1px solid var(--border);
+  line-height: 1.6; padding-left: 1.2rem; position: relative;
+}
+.crit-list li::before {
+  position: absolute; left: 0; top: 0.4rem;
+  font-size: 0.7rem;
+}
+.crit-cell.strength .crit-list li::before { content: '✓'; color: var(--teal); }
+.crit-cell.limit    .crit-list li::before { content: '↯'; color: var(--rust); }
+.crit-list li:last-child { border-bottom: none; }
+
+/* ── YOUR STUDY BRIDGE ── */
+.bridge-box {
+  background: rgba(26,39,68,0.06);
+  border: 1px solid rgba(26,39,68,0.2);
+  border-left: 4px solid var(--navy);
+  padding: 1.75rem 2rem; margin: 2rem 0;
+}
+.bridge-box h3 { margin-top: 0; color: var(--navy); font-size: 1.4rem; }
+
+@media(max-width:700px){
+  .stat-strip { grid-template-columns: 1fr 1fr; }
+  .split-layout, .split-layout.rev { grid-template-columns: 1fr; }
+  .crit-grid { grid-template-columns: 1fr; }
+  .paper-banner { padding: 2.5rem 1.5rem 2rem; }
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+  <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html" class="active">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+
+  <!-- ══ PAPER HEADER ══════════════════════════════════════ -->
+  <div class="paper-banner">
+    <div class="paper-meta">Paper Dissection · Journal of Affective Disorders · 2023</div>
+    <div class="paper-title">Multilingual Markers of Depression in Remotely Collected Speech Samples: A Preliminary Analysis</div>
+    <div class="paper-authors">
+      <strong>Nicholas Cummins</strong>, Judith Dineley, Pauline Conde, Faith Matcham, Sara Siddi, Femke Lamers, Ewan Carr, Grace Lavelle, Daniel Leightley, Katie M. White, Carolin Oetzmann, Edward L. Campbell, Sara Simblett, Stuart Bruce, Josep Maria Haro, Brenda W.J.H. Penninx, Yatharth Ranjan, Zulqarnain Rashid, Callum Stewart, Amos A. Folarin, Raquel Bailón, Björn W. Schuller, Til Wykes, Srinivasan Vairavan, Richard J.B. Dobson, Vaibhav A. Narayan, Matthew Hotopf &amp; the RADAR-CNS Consortium
+    </div>
+    <div class="paper-journal">
+      <em>Journal of Affective Disorders</em>, Vol. 341, pp. 128–136, November 2023 ·
+      <a href="https://doi.org/10.1016/j.jad.2023.08.097" target="_blank">doi: 10.1016/j.jad.2023.08.097</a> ·
+      Corresponding author: <strong>nick.cummins@kcl.ac.uk</strong> — Institute of Psychiatry, Psychology &amp; Neuroscience, King's College London
+    </div>
+  </div>
+
+  <!-- ══ QUICK STATS ════════════════════════════════════════ -->
+  <div class="stat-strip">
+    <div class="ss-cell"><div class="ss-num gold">585</div><div class="ss-label">Participants enrolled</div></div>
+    <div class="ss-cell"><div class="ss-num teal">461</div><div class="ss-label">With analysable speech (79%)</div></div>
+    <div class="ss-cell"><div class="ss-num">18</div><div class="ss-label">Months follow-up</div></div>
+    <div class="ss-cell"><div class="ss-num">28</div><div class="ss-label">Speech features tested</div></div>
+    <div class="ss-cell"><div class="ss-num rust">3</div><div class="ss-label">Languages · countries</div></div>
+  </div>
+
+  <div class="content-wide">
+
+    <!-- ══ WHY THIS PAPER ══════════════════════════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// Why This Paper</div>
+      <div class="ds-heading">The single most relevant paper to your experiment</div>
+
+      <div class="split-layout">
+        <div>
+          <p>This is the paper you will almost certainly cite when writing up your own KCL voice study. It is the <strong>largest real-world, longitudinal speech study in clinical depression</strong> ever conducted at the time of publication — 585 participants with a confirmed history of MDD across three languages, recording themselves via smartphone every fortnight for 18 months, with fortnightly PHQ-8 assessments to track symptom severity.</p>
+          <p>The corresponding author is <strong>Dr Nicholas Cummins</strong>, your supervisor at KCL. Understanding this paper deeply — its choices, its findings, and its acknowledged limitations — is foundational context for whatever you will do next in his lab.</p>
+          <p>Crucially, the central statistical tool is <strong>exactly the LMM you have been studying</strong>: a random intercept model with PHQ-8 as the fixed predictor, one model per speech feature, estimated with the <code>lme4</code> package in R. This makes the paper a perfect illustration of LMMs applied at scale to precisely the kind of data you will encounter.</p>
+
+          <div class="callout navy" style="margin-top:1.5rem;">
+            <div class="callout-label">Why it matters that LMMs were used — not simple correlation</div>
+            <p>Earlier studies (including many that found stronger pause effects) used simple correlations or group comparisons. They did not account for the clustering of repeated measures within the same person. This paper explicitly corrects for this using random intercepts — and as a result, some previously "significant" findings (notably pause-related features) became non-significant. The LMM gave more honest, if sometimes less dramatic, answers.</p>
+          </div>
+        </div>
+        <div>
+          <div class="design-fig">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:1rem;">// Study timeline — one participant</div>
+            <canvas id="timelineCanvas" height="200"></canvas>
+            <div class="design-caption">Each participant completed fortnightly cycles: a smartphone speech recording followed immediately by a PHQ-8 questionnaire. Over 18 months, this generates ~39 paired (speech, PHQ-8) datapoints per participant — a dense longitudinal dataset within each person.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STUDY DESIGN ════════════════════════════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// Study Design</div>
+      <div class="ds-heading">What they did and <em>how</em></div>
+
+      <div class="split-layout rev">
+        <div>
+          <div class="design-fig">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:1rem;">// Three cohorts, two speech tasks</div>
+            <canvas id="cohortCanvas" height="240"></canvas>
+            <div class="design-caption">Participants were split across three language cohorts. Each completed two speech tasks every fortnight: a scripted task (reading a fixed passage — controls content, isolates acoustic features) and a free response task (describing a picture — allows natural language but is acoustically variable). Results were modelled separately by language and by task — yielding a grid of 6 sets of LMMs.</div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-top:0;">Participants</h3>
+          <p>Adults with a history of MDD, recruited via the RADAR-MDD study across King's College London (UK), Vrije Universiteit Amsterdam (Netherlands), and FIDMAG (Spain). Inclusion required a confirmed episode of MDD in the past 5 years. The study was naturalistic — participants recorded themselves at home, in their own acoustic environments, using their own smartphones.</p>
+
+          <h3>The two speech tasks</h3>
+          <p><strong>Scripted task:</strong> Read aloud a fixed phonetically balanced passage ("The North Wind and the Sun" — an IPA standard text used globally in linguistics). Advantages: content is identical for all participants, so any acoustic variation reflects the speaker, not what they said. Disadvantages: somewhat artificial, may not reflect natural speech. This task showed stronger LMM associations.</p>
+          <p><strong>Free response task:</strong> Describe a picture for 30–60 seconds. More naturalistic, but content varies — what someone chooses to say also depends on depression, making it harder to isolate acoustic effects from linguistic effects.</p>
+
+          <h3>The outcome measure</h3>
+          <p>PHQ-8 (Patient Health Questionnaire, 8 items, scored 0–24). Completed fortnightly at the same time as the speech recording. This is the depression severity score used as the predictor in every LMM.</p>
+
+          <div class="callout teal">
+            <div class="callout-label">Missing data — and why LMM was essential</div>
+            <p>Of 585 enrolled participants, only 461 (79%) provided any analysable speech data. Dropout was substantial and correlated with baseline severity in the Spanish cohort. LMMs were essential because they handle unbalanced data: each participant contributed a different number of timepoints (median ~433 days of active recording, IQR 358–473 days). ANOVA would have required complete cases — discarding the partial data from 124 participants entirely.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ THE LMM: EXACTLY HOW THEY DID IT ═══════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// Statistical Method — Full Decomposition</div>
+      <div class="ds-heading">The LMM specification, <em>every decision explained</em></div>
+
+      <p>The authors ran <strong>one LMM per speech feature</strong> (28 features × 3 languages × 2 tasks = up to 168 models). Each model had the same structure:</p>
+
+      <div class="model-spec">
+        <span class="ms-c"># The exact model (per feature, per language, per task)</span><br>
+        feature_z ~ <span class="ms-v">phq8</span> + <span class="ms-v">age</span> + <span class="ms-v">height</span> + <span class="ms-v">gender</span> + <span class="ms-v">years_education</span> + (1 | <span class="ms-k">participant_id</span>)<br><br>
+        <span class="ms-c"># Fitted with lme4 in R:</span><br>
+        lmer(feature_z ~ phq8 + age + height + gender + years_educ + (1|participant), <span class="ms-s">REML=TRUE</span>)<br><br>
+        <span class="ms-c"># Coefficients reported as standardised betas with 95% CI</span><br>
+        <span class="ms-c"># CIs obtained by bootstrap resampling (1000 iterations) — not parametric</span><br>
+        <span class="ms-ok"># → robust to non-normality of residuals</span>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <h3>Decision 1 — Random intercepts only, not random slopes</h3>
+          <p>Each participant gets their own baseline level for each speech feature (random intercept). The effect of PHQ-8 on voice is assumed <em>the same across all participants</em> (fixed slope). The authors did not fit random slopes for PHQ-8. Why not?</p>
+          <ul style="font-size:0.9rem;color:var(--ink-faint);line-height:1.8;padding-left:1.2rem;margin:0.75rem 0;">
+            <li>Random slopes require more observations per participant. With fortnightly data and substantial dropout, many participants had too few timepoints.</li>
+            <li>The primary scientific question was cohort-level: "Does depression severity correlate with voice features on average?" — not "Does this correlation vary by person?"</li>
+            <li>Random slope models for 168 feature × language × task combinations would have severe convergence issues.</li>
+          </ul>
+          <div class="callout gold">
+            <div class="callout-label">What this means for interpreting the β coefficients</div>
+            <p>The β on PHQ-8 is a population-average effect: "for a 1 SD increase in this feature across the cohort, PHQ-8 changes by β points, on average, controlling for individual baseline differences." It does not tell you how any individual patient's voice changes with their own depression changes — that would require random slopes or a within-person analysis.</p>
+          </div>
+        </div>
+        <div>
+          <h3>Decision 2 — Feature standardisation before modelling</h3>
+          <p>Each speech feature was standardised (mean = 0, SD = 1) across the whole dataset before entering the LMM. This means:</p>
+          <ul style="font-size:0.9rem;color:var(--ink-faint);line-height:1.8;padding-left:1.2rem;margin:0.75rem 0;">
+            <li>All 28 features are now on the same scale — β coefficients are directly comparable across features.</li>
+            <li>A β of 0.05 for speech rate means the same thing as a β of 0.05 for pause duration: a 1 SD change in the feature associates with a 0.05 unit change in PHQ-8.</li>
+            <li>The intercept term becomes interpretable: it is the expected PHQ-8 when all features are at the cohort average.</li>
+          </ul>
+
+          <h3>Decision 3 — Bootstrap CIs, not parametric</h3>
+          <p>Rather than computing standard errors from the model's Fisher information matrix (the usual approach), the authors used <strong>1000 bootstrap samples</strong> to construct confidence intervals. This gives more reliable uncertainty estimates when residuals may not be perfectly normal — as is likely with naturalistically collected speech data.</p>
+        </div>
+      </div>
+
+      <h3>The covariates — and why they matter</h3>
+      <p>Age, height, gender, and years in education were included as fixed-effect covariates. This is not arbitrary tidying — each has a specific acoustic justification:</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--border);margin:1rem 0;">
+        <div style="background:white;padding:1rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Age</div>
+          <div style="font-size:0.82rem;color:var(--ink-faint);line-height:1.6;">Voice changes with age — lower pitch, slower rate, greater breathiness. Older participants would systematically differ in acoustic features regardless of depression.</div>
+        </div>
+        <div style="background:white;padding:1rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Height</div>
+          <div style="font-size:0.82rem;color:var(--ink-faint);line-height:1.6;">Taller people tend to have longer vocal tracts — deeper resonant frequencies (lower F1/F2 formants). A confound for spectral features.</div>
+        </div>
+        <div style="background:white;padding:1rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Gender</div>
+          <div style="font-size:0.82rem;color:var(--ink-faint);line-height:1.6;">Large pitch differences (F0) between typical male/female voices. Without controlling for gender, pitch features would be dominated by this biological difference, not depression.</div>
+        </div>
+        <div style="background:white;padding:1rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--navy);margin-bottom:0.4rem;">Education</div>
+          <div style="font-size:0.82rem;color:var(--ink-faint);line-height:1.6;">Years in education correlates with verbal fluency, articulation rate, and lexical complexity — which affect speech rate and pause features independently of depression severity.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RESULTS ══════════════════════════════════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// Results</div>
+      <div class="ds-heading">What the LMMs found — and <em>what they didn't</em></div>
+
+      <div class="split-layout">
+        <div>
+          <p>The core result is both clinically meaningful and statistically sobering. Three features showed consistent, significant associations with PHQ-8 severity — all from the <strong>scripted task</strong>, and all related to speech <em>rate</em> and <em>intensity</em> rather than to <em>pausing</em>.</p>
+
+          <table class="res-table">
+            <thead>
+              <tr><th>Feature</th><th>Task</th><th>Language</th><th>Direction</th><th>Significance</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Speech rate</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">syllables per second, including pauses</span></td>
+                <td><span class="badge-lang">Scripted</span></td>
+                <td><span class="badge-lang">EN</span> <span class="badge-lang">NL</span></td>
+                <td>↓ Lower with ↑ PHQ-8</td>
+                <td><span class="badge-sig">Significant</span></td>
+              </tr>
+              <tr>
+                <td><strong>Articulation rate</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">syllables per second, pauses excluded</span></td>
+                <td><span class="badge-lang">Scripted</span></td>
+                <td><span class="badge-lang">EN</span> <span class="badge-lang">NL</span></td>
+                <td>↓ Lower with ↑ PHQ-8</td>
+                <td><span class="badge-sig">Significant</span></td>
+              </tr>
+              <tr>
+                <td><strong>Intensity / loudness</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">mean energy of speech frames</span></td>
+                <td><span class="badge-lang">Scripted</span></td>
+                <td><span class="badge-lang">EN</span> <span class="badge-lang">NL</span></td>
+                <td>↓ Quieter with ↑ PHQ-8</td>
+                <td><span class="badge-sig">Significant</span></td>
+              </tr>
+              <tr>
+                <td><strong>Recording duration</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">total length of submitted audio</span></td>
+                <td><span class="badge-lang">Scripted</span></td>
+                <td><span class="badge-lang">EN</span> <span class="badge-lang">NL</span></td>
+                <td>↑ Longer with ↑ PHQ-8</td>
+                <td><span class="badge-sig">Significant</span></td>
+              </tr>
+              <tr style="background:rgba(181,69,27,0.04);">
+                <td><strong>Pause rate</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">number of pauses per minute</span></td>
+                <td><span class="badge-lang">Both</span></td>
+                <td><span class="badge-lang">All</span></td>
+                <td>—</td>
+                <td><span class="badge-ns">Not significant</span></td>
+              </tr>
+              <tr style="background:rgba(181,69,27,0.04);">
+                <td><strong>Pause duration</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">mean length of pauses</span></td>
+                <td><span class="badge-lang">Both</span></td>
+                <td><span class="badge-lang">All</span></td>
+                <td>—</td>
+                <td><span class="badge-ns">Not significant</span></td>
+              </tr>
+              <tr style="background:rgba(181,69,27,0.04);">
+                <td><strong>F0 (pitch) features</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">mean, range, variability</span></td>
+                <td><span class="badge-lang">Both</span></td>
+                <td><span class="badge-lang">All</span></td>
+                <td>—</td>
+                <td><span class="badge-ns">Not significant</span></td>
+              </tr>
+              <tr style="background:rgba(181,69,27,0.04);">
+                <td><strong>Free response task features</strong><br><span style="font-size:0.78rem;color:var(--ink-ghost);">all features from picture description</span></td>
+                <td><span class="badge-lang">Free</span></td>
+                <td><span class="badge-lang">All</span></td>
+                <td>—</td>
+                <td><span class="badge-ns">Inconsistent / NS</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout rust" style="margin-top:1.5rem;">
+            <div class="callout-label">The pause paradox — why the LMM found what others didn't</div>
+            <p>Many prior studies reported that pause duration and pause rate increase with depression. This paper found <em>no significant association</em> for pause features. The key methodological difference: earlier studies did not account for repeated-measures clustering within participants. Without random intercepts, within-person correlations inflate test statistics — producing false positives. Once the LMM correctly partitioned variance, the pause-depression link evaporated. This is a direct, consequential example of why LMMs matter.</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="design-fig">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:1rem;">// Figure: Standardised β coefficients for scripted task, English cohort</div>
+            <canvas id="coefCanvas" height="300"></canvas>
+            <div class="design-caption">Each point represents the β coefficient from one LMM — the association between a 1-SD change in that speech feature and PHQ-8 score. Error bars are 95% bootstrap CIs. Features whose CI crosses zero are not significantly associated with depression severity. Speech rate, articulation rate, and intensity show consistent negative associations (more depressed → slower, quieter).</div>
+          </div>
+
+          <div class="design-fig" style="margin-top:1.5rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:1rem;">// Within-patient trajectory example: speech rate over 18 months</div>
+            <canvas id="trajCanvas" height="200"></canvas>
+            <div class="design-caption">Illustration of the longitudinal structure: one patient's speech rate (standardised) plotted against their PHQ-8 score at each fortnightly session. The random intercept absorbs the vertical offset — the LMM then estimates the slope within this trajectory. Each patient contributes their own trajectory; the fixed effect β is the average slope across all trajectories.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spanish cohort -->
+      <div class="callout navy" style="margin-top:1.5rem;">
+        <div class="callout-label">The Spanish cohort — a systematic null result</div>
+        <p>The Spanish cohort showed no significant associations between any speech feature and PHQ-8 severity — in either task. The paper attributes this to: (1) baseline severity was significantly higher for Spanish participants who provided scripted speech, suggesting selection bias; (2) the passage used ("The North Wind and the Sun") was translated from English and may not have been as phonetically balanced in Spanish; (3) smaller effective sample from the Spanish site. This is an important caution: speech biomarkers may not transfer straightforwardly across languages and cultural contexts even within the same study.</p>
+      </div>
+    </div>
+
+    <!-- ══ STRENGTHS & LIMITATIONS ══════════════════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// Critical Appraisal</div>
+      <div class="ds-heading">Strengths and limitations — <em>what the paper itself says, and what it doesn't</em></div>
+
+      <div class="crit-grid">
+        <div class="crit-cell strength">
+          <div class="crit-head">✓ Strengths</div>
+          <ul class="crit-list">
+            <li><strong>Scale:</strong> Largest real-world longitudinal speech dataset in clinical MDD at publication. 585 participants, 18 months, ecological validity — people speaking at home, not in sound booths.</li>
+            <li><strong>Clinical sample:</strong> Participants had confirmed MDD history — not students, not MTurk workers, not subclinical populations. Findings are directly applicable to clinical settings.</li>
+            <li><strong>Multilingual:</strong> Three languages tested simultaneously in the same study. Allows assessment of which findings generalise beyond English, which is rare in the speech-depression literature.</li>
+            <li><strong>Correct statistics:</strong> LMMs with random intercepts — explicitly accounts for repeated-measures clustering. This is why some earlier pause-based results were not replicated: the prior studies used inappropriate methods.</li>
+            <li><strong>Bootstrap CIs:</strong> More robust uncertainty estimates than parametric SEs, appropriate given noisy ecological data.</li>
+            <li><strong>Open methods:</strong> Feature extraction via Parselmouth (open-source Praat wrapper), models in lme4. Reproducible pipeline.</li>
+          </ul>
+        </div>
+        <div class="crit-cell limit">
+          <div class="crit-head">↯ Limitations</div>
+          <ul class="crit-list">
+            <li><strong>Cohort-level effects only:</strong> The random intercept model estimates average associations across the cohort. It cannot tell you whether an individual patient's voice is tracking their own depression changes — that requires random slopes or N-of-1 designs. The paper explicitly acknowledges this as a major limitation.</li>
+            <li><strong>No random slopes:</strong> Individual variation in the PHQ-8→speech relationship is absorbed into residual error rather than modelled. Some patients may show strong individual-level associations that the cohort-level analysis misses.</li>
+            <li><strong>Recording quality variance:</strong> Smartphone recording in varied home environments introduces acoustic noise. No microphone standardisation. This likely adds measurement error that biases β towards zero (attenuation bias).</li>
+            <li><strong>Spanish cohort issues:</strong> Differential dropout correlated with severity, potentially different task translation quality. Spanish results should be interpreted with caution.</li>
+            <li><strong>Features averaged over recording:</strong> The paper averages acoustic features across the entire recording. Temporal dynamics within a recording (how voice changes from start to end) are lost. These dynamics may be more sensitive to depression than global averages.</li>
+            <li><strong>PHQ-8 as ground truth:</strong> PHQ-8 is a self-report scale, not a clinical assessment. It has ceiling and floor effects, and is subject to response bias. Error in the predictor (classical measurement error) attenuates regression coefficients.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LMM DECISIONS ANNOTATED ══════════════════════════ -->
+    <div class="dissect-section">
+      <div class="ds-label">// LMM Decisions — Annotated</div>
+      <div class="ds-heading">Every modelling choice <em>mapped to the equation</em></div>
+
+      <p>Using Y = Xβ + Zu + ε as the template, here is where each paper decision lands:</p>
+
+      <div style="background:white; border:1px solid var(--border); padding:2rem; margin:1.5rem 0;">
+        <canvas id="eqMapCanvas" height="320"></canvas>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
+        <div style="background:white; border:1px solid var(--border); border-top:3px solid var(--fixed-col); padding:1.25rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--fixed-col);margin-bottom:0.5rem;">Fixed Effects (Xβ)</div>
+          <p style="font-size:0.87rem;color:var(--ink-faint);line-height:1.65;margin:0;"><strong>X contains:</strong> PHQ-8 (the predictor of interest), plus age, height, gender, years_education (covariates). <strong>β contains:</strong> the population-average effect of each. β_phq8 is the coefficient of interest — it answers "across all participants, does worse depression associate with a different voice?"</p>
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-top:3px solid var(--random-col); padding:1.25rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--random-col);margin-bottom:0.5rem;">Random Effects (Zu)</div>
+          <p style="font-size:0.87rem;color:var(--ink-faint);line-height:1.65;margin:0;"><strong>Z is</strong> the participant membership matrix — a 1 in column j for every row belonging to participant j. <strong>u is</strong> the vector of random intercepts, one per participant: u_Alice, u_Bob, … ~ N(0, σ²_u). These absorb each participant's stable voice baseline. Without u, Alice's naturally slow speech would inflate the speech-rate coefficient.</p>
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-top:3px solid var(--rust); padding:1.25rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--rust);margin-bottom:0.5rem;">Residuals (ε)</div>
+          <p style="font-size:0.87rem;color:var(--ink-faint);line-height:1.65;margin:0;">Within-participant, within-session noise. Captures: recording environment variation, microphone quality, the participant's mood at that exact moment beyond their PHQ-8 score, any other unmodelled source. Bootstrap CIs help because ε is probably not perfectly normal given ecological recording conditions.</p>
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-top:3px solid var(--gold); padding:1.25rem;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">The ICC — implied by the model</div>
+          <p style="font-size:0.87rem;color:var(--ink-faint);line-height:1.65;margin:0;">The paper doesn't report ICC explicitly, but REML estimates σ²_u and σ²_ε for each model. For speech rate, you'd expect ICC ≈ 0.4–0.7 — meaning 40–70% of variance in speech rate is stable across a person's sessions, not fluctuating with depression. This high ICC is precisely why LMMs were non-optional.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ YOUR STUDY BRIDGE ════════════════════════════════ -->
+    <div class="dissect-section" style="border-bottom:none;">
+      <div class="ds-label">// Relevance to Your Work</div>
+      <div class="ds-heading">What this means for your <em>KCL experiment</em></div>
+
+      <div class="bridge-box">
+        <h3>You are likely picking up where this paper left off</h3>
+        <p>This paper calls out its own main limitation: it estimates population-average (between-person) effects, not individual-level (within-person) change. Its random intercept model cannot tell you whether a specific patient's voice is tracking their specific depression trajectory.</p>
+        <p>Your work with Dr Cummins at KCL is likely addressing exactly this — either through: (a) <strong>random slopes models</strong> that estimate each participant's individual PHQ-8→voice slope; (b) <strong>N-of-1 study designs</strong> analysed with LMMs or Bayesian methods; or (c) <strong>more targeted acoustic feature engineering</strong> focused on temporal dynamics within recordings rather than global averages.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
+        <div class="callout teal" style="margin:0;">
+          <div class="callout-label">Use this paper to justify your LMM</div>
+          <p style="margin:0;font-size:0.87rem;">Cummins et al. (2023) establishes that LMMs with random intercepts are the correct approach for repeated speech data in depression research. You can cite it directly as methodological precedent — it is from your lab, it uses your data platform, and it uses your exact tools.</p>
+        </div>
+        <div class="callout rust" style="margin:0;">
+          <div class="callout-label">Expect to extend the random effects structure</div>
+          <p style="margin:0;font-size:0.87rem;">If your study has more observations per participant, you can fit random slopes — allowing each participant's β_phq8 to differ. This addresses the core limitation this paper flags. Whether the data support random slopes depends on your N per person and your ICC estimates.</p>
+        </div>
+        <div class="callout gold" style="margin:0;">
+          <div class="callout-label">Pause features are not dead</div>
+          <p style="margin:0;font-size:0.87rem;">The null result for pauses at the cohort level doesn't mean pauses are not biomarkers. It means the average effect across people is small or inconsistent. At the individual level, some patients may show strong pause-depression correlations. A random slopes analysis would test this directly.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-wide -->
+</div><!-- /page-body -->
+
+<footer class="site-footer"><p>Paper Dissection · Cummins et al. (2023) · J Affect Disord 341:128–136 · King's College London</p></footer>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+const NAVY='#1a2744', RUST='#b5451b', TEAL='#1a6b5c', GOLD='#c8930a', PURPLE='#5b3a8a';
+
+function setup(id, h) {
+  const c = document.getElementById(id); if (!c) return null;
+  const W = c.parentElement.clientWidth - 32;
+  c.width = W*DPR; c.height = h*DPR;
+  c.style.width = W+'px'; c.style.height = h+'px';
+  const ctx = c.getContext('2d'); ctx.scale(DPR, DPR);
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,h);
+  return {ctx, W, H:h};
+}
+
+// ── TIMELINE: one participant's data collection ──────────
+function drawTimeline() {
+  const s = setup('timelineCanvas', 200); if (!s) return;
+  const {ctx, W, H} = s;
+
+  const n = 12; // sessions shown
+  const pad = 40;
+  const toX = i => pad + i/(n-1) * (W - 2*pad);
+  const midY = H/2;
+
+  // Timeline axis
+  ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, midY); ctx.lineTo(W-pad, midY); ctx.stroke();
+
+  // Session markers
+  const phq = [14,16,12,18,15,11,9,13,16,10,8,11]; // simulated PHQ-8
+  const speechRate = [0.4,0.2,0.6,-0.1,0.3,0.8,1.0,0.5,0.1,0.9,1.2,0.7]; // simulated (inverted — lower rate at higher PHQ)
+
+  // PHQ line (above axis)
+  ctx.strokeStyle = RUST; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  phq.forEach((v,i) => {
+    const x = toX(i), y = midY - (v-8)/12 * (H/2 - 20);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  phq.forEach((v,i) => {
+    ctx.fillStyle = RUST;
+    ctx.beginPath(); ctx.arc(toX(i), midY-(v-8)/12*(H/2-20), 4, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Speech rate line (below axis)
+  ctx.strokeStyle = TEAL; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  speechRate.forEach((v,i) => {
+    const x = toX(i), y = midY + (v/1.5) * (H/2 - 20);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  speechRate.forEach((v,i) => {
+    ctx.fillStyle = TEAL;
+    ctx.beginPath(); ctx.arc(toX(i), midY+(v/1.5)*(H/2-20), 4, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Axis label
+  ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1; ctx.setLineDash([3,2]);
+  ctx.beginPath(); ctx.moveTo(pad, midY); ctx.lineTo(W-pad, midY); ctx.stroke(); ctx.setLineDash([]);
+
+  // Fortnightly markers
+  ctx.fillStyle = '#aaa'; ctx.font = '9px JetBrains Mono, monospace'; ctx.textAlign = 'center';
+  for(let i=0;i<n;i++) ctx.fillText(`W${i*2+2}`, toX(i), H-6);
+
+  // Labels
+  ctx.fillStyle = RUST; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('PHQ-8 ↑', pad, 16);
+  ctx.fillStyle = TEAL;
+  ctx.fillText('Speech rate ↓ (standardised)', pad, H-20);
+}
+
+// ── COHORT BARS ──────────────────────────────────────────
+function drawCohort() {
+  const s = setup('cohortCanvas', 240); if (!s) return;
+  const {ctx, W, H} = s;
+
+  const cohorts = [
+    {name:'UK (English)', n:234, analysable:192, col:NAVY},
+    {name:'Netherlands (Dutch)', n:191, analysable:162, col:TEAL},
+    {name:'Spain (Spanish)', n:160, analysable:107, col:RUST},
+  ];
+  const maxN = 234;
+  const pad = 30, bh = 36, gap = 28;
+  const barW = W - pad - 180;
+
+  cohorts.forEach((c, i) => {
+    const y = pad + i*(bh + gap);
+    // Background bar
+    ctx.fillStyle = '#f0ede6';
+    ctx.fillRect(180, y, barW, bh);
+    // Enrolled bar
+    ctx.fillStyle = c.col + '40';
+    ctx.fillRect(180, y, (c.n/maxN)*barW, bh);
+    // Analysable bar
+    ctx.fillStyle = c.col;
+    ctx.fillRect(180, y, (c.analysable/maxN)*barW, bh);
+
+    // Label
+    ctx.fillStyle = c.col; ctx.font = 'bold 11px Source Serif 4, serif'; ctx.textAlign = 'right';
+    ctx.fillText(c.name, 175, y + bh/2 + 4);
+
+    // Numbers
+    ctx.fillStyle = 'white'; ctx.font = 'bold 11px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${c.analysable}/${c.n}`, 180 + (c.analysable/maxN)*barW + 5, y + bh/2 + 4);
+  });
+
+  // Tasks
+  const ty = pad + 3*(bh+gap) + 10;
+  ctx.fillStyle = '#aaa'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('Two tasks per fortnightly session:', 10, ty);
+  [[NAVY,'Scripted: "The North Wind & the Sun" (IPA standard passage)'],[TEAL,'Free response: describe a picture (30–60 s)']].forEach(([col,lab],i) => {
+    ctx.fillStyle = col; ctx.fillRect(10, ty+14+i*18, 12, 10);
+    ctx.fillStyle = '#4a4a6a'; ctx.font = '10px Source Serif 4'; ctx.textAlign = 'left';
+    ctx.fillText(lab, 28, ty+22+i*18);
+  });
+  ctx.fillStyle = '#aaa'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('analysable / enrolled', 10, ty+70);
+}
+
+// ── COEFFICIENT PLOT ─────────────────────────────────────
+function drawCoef() {
+  const s = setup('coefCanvas', 300); if (!s) return;
+  const {ctx, W, H} = s;
+  const pad = {l:180, r:40, t:20, b:30};
+
+  // Simulated coefficients matching paper's approximate findings (EN scripted)
+  const features = [
+    {name:'Speech rate',       beta:-0.072, lo:-0.115, hi:-0.029, sig:true},
+    {name:'Articulation rate', beta:-0.065, lo:-0.108, hi:-0.022, sig:true},
+    {name:'Intensity (mean)',  beta:-0.058, lo:-0.097, hi:-0.019, sig:true},
+    {name:'Recording duration',beta: 0.048, lo: 0.008, hi: 0.088, sig:true},
+    {name:'Phonation ratio',   beta: 0.031, lo:-0.005, hi: 0.067, sig:false},
+    {name:'Pause rate',        beta: 0.018, lo:-0.024, hi: 0.060, sig:false},
+    {name:'Pause duration',    beta: 0.012, lo:-0.031, hi: 0.055, sig:false},
+    {name:'F0 mean (pitch)',   beta:-0.015, lo:-0.055, hi: 0.025, sig:false},
+    {name:'F0 variability',    beta:-0.009, lo:-0.048, hi: 0.030, sig:false},
+  ];
+
+  const allVals = features.flatMap(f => [f.lo, f.hi]);
+  const xMin = Math.min(...allVals) - 0.01, xMax = Math.max(...allVals) + 0.01;
+  const toX = v => pad.l + (v - xMin)/(xMax - xMin) * (W - pad.l - pad.r);
+  const rowH = (H - pad.t - pad.b) / features.length;
+
+  // Zero line
+  const x0 = toX(0);
+  ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.setLineDash([3,2]);
+  ctx.beginPath(); ctx.moveTo(x0, pad.t); ctx.lineTo(x0, H-pad.b); ctx.stroke(); ctx.setLineDash([]);
+
+  // X axis ticks
+  [-0.1,-0.05,0,0.05].forEach(v => {
+    ctx.fillStyle = '#aaa'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText(v.toFixed(2), toX(v), H-pad.b+12);
+  });
+  ctx.fillStyle = '#aaa'; ctx.font = '9px Source Serif 4'; ctx.textAlign = 'center';
+  ctx.fillText('Standardised β (PHQ-8 change per 1 SD feature change)', W/2+40, H-2);
+
+  features.forEach((f, i) => {
+    const y = pad.t + (i+0.5)*rowH;
+    const col = f.sig ? (f.beta < 0 ? RUST : TEAL) : '#c8c8c8';
+
+    // CI line
+    ctx.strokeStyle = col; ctx.lineWidth = f.sig ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(toX(f.lo), y); ctx.lineTo(toX(f.hi), y); ctx.stroke();
+    // End ticks
+    ctx.beginPath(); ctx.moveTo(toX(f.lo), y-4); ctx.lineTo(toX(f.lo), y+4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toX(f.hi), y-4); ctx.lineTo(toX(f.hi), y+4); ctx.stroke();
+    // Point
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(toX(f.beta), y, f.sig ? 5 : 3.5, 0, Math.PI*2); ctx.fill();
+
+    // Label
+    ctx.fillStyle = f.sig ? NAVY : '#aaa';
+    ctx.font = `${f.sig ? 'bold ' : ''}10px Source Serif 4`;
+    ctx.textAlign = 'right';
+    ctx.fillText(f.name, pad.l-8, y+4);
+  });
+
+  // Legend
+  ctx.fillStyle = RUST; ctx.beginPath(); ctx.arc(W-110,pad.t+8,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = NAVY; ctx.font='9px Source Serif 4'; ctx.textAlign='left'; ctx.fillText('Significant (95% CI excludes 0)', W-100, pad.t+12);
+  ctx.fillStyle = '#ccc'; ctx.beginPath(); ctx.arc(W-110,pad.t+24,4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#aaa'; ctx.fillText('Not significant', W-100, pad.t+28);
+}
+
+// ── TRAJECTORY ───────────────────────────────────────────
+function drawTraj() {
+  const s = setup('trajCanvas', 200); if (!s) return;
+  const {ctx, W, H} = s;
+  const pad = 40;
+
+  // Simulated: higher PHQ-8 → lower speech rate
+  const obs = [
+    {phq:14,sr:-0.3},{phq:16,sr:-0.6},{phq:12,sr:0.1},{phq:18,sr:-0.9},
+    {phq:15,sr:-0.4},{phq:11,sr:0.3},{phq:9,sr:0.7},{phq:13,sr:0.0},
+    {phq:16,sr:-0.5},{phq:10,sr:0.5},{phq:8,sr:0.9},{phq:11,sr:0.2},
+  ];
+
+  const toX = v => pad + (v-6)/(20-6)*(W-2*pad);
+  const toY = v => H-pad - (v-(-1.2))/(2)*(H-2*pad);
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+
+  [8,10,12,14,16,18].forEach(v => {
+    ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(v, toX(v), H-pad+12);
+  });
+  ctx.fillStyle='#aaa'; ctx.font='9px Source Serif 4'; ctx.textAlign='center';
+  ctx.fillText('PHQ-8', W/2, H-2);
+  ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Speech rate (standardised)', 0, 0); ctx.restore();
+
+  // LMM fitted line (random intercept for this person)
+  const b0_person = 2.1, b1 = -0.15; // person has higher baseline
+  ctx.strokeStyle = TEAL; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(toX(6), toY(b0_person+b1*6)); ctx.lineTo(toX(20), toY(b0_person+b1*20)); ctx.stroke();
+  ctx.fillStyle = TEAL; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('fitted line (random intercept = +2.1)', toX(7), toY(b0_person+b1*7)-8);
+
+  // Population line
+  const b0_pop = 0, b1_pop = -0.15;
+  ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(toX(6), toY(b0_pop+b1_pop*6)); ctx.lineTo(toX(20), toY(b0_pop+b1_pop*20)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('population average', toX(12), toY(b0_pop+b1_pop*12)+12);
+
+  // Points
+  obs.forEach(o => {
+    ctx.fillStyle = NAVY;
+    ctx.beginPath(); ctx.arc(toX(o.phq), toY(o.sr+2.1), 4, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+// ── EQUATION MAP ─────────────────────────────────────────
+function drawEqMap() {
+  const s = setup('eqMapCanvas', 320); if (!s) return;
+  const {ctx, W, H} = s;
+
+  // Draw the equation prominently
+  const eq = [
+    {t:'feature_z', col:'#aaa', x:60},
+    {t:'=', col:'#aaa', x:165},
+    {t:'Xβ', col:PURPLE, x:210},
+    {t:'+', col:'#aaa', x:260},
+    {t:'Zu', col:TEAL, x:300},
+    {t:'+', col:'#aaa', x:350},
+    {t:'ε', col:RUST, x:385},
+  ];
+  eq.forEach(e => {
+    ctx.fillStyle = e.col;
+    ctx.font = 'bold 36px Cormorant Garamond, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(e.t, e.x, 55);
+  });
+
+  // Annotation lines and boxes
+  const annot = [
+    {x:210, col:PURPLE, label:'PHQ-8 (main predictor)\nage, height, gender, education\n(covariates)', ly:90},
+    {x:300, col:TEAL,   label:'Random intercept per\nparticipant: u_i ~ N(0,σ²_u)\nabsorbs voice baseline', ly:90},
+    {x:385, col:RUST,   label:'Within-session noise:\nmicrophone, environment,\nmoment-to-moment variation', ly:90},
+    {x:60,  col:'#aaa', label:'Standardised speech feature\n(mean=0, SD=1 across cohort)\ne.g. speech rate, intensity', ly:90},
+  ];
+
+  annot.forEach(a => {
+    ctx.strokeStyle = a.col + '88'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(a.x, 62); ctx.lineTo(a.x, a.ly); ctx.stroke();
+
+    ctx.fillStyle = a.col + '15';
+    const lines = a.label.split('\n');
+    const bw = 150, bh = lines.length * 17 + 14;
+    let bx = a.x - bw/2;
+    bx = Math.max(4, Math.min(W-bw-4, bx));
+    ctx.fillRect(bx, a.ly, bw, bh);
+    ctx.strokeStyle = a.col; ctx.lineWidth = 1;
+    ctx.strokeRect(bx, a.ly, bw, bh);
+
+    ctx.fillStyle = a.col;
+    ctx.font = '9px Source Serif 4, serif'; ctx.textAlign = 'center';
+    lines.forEach((l,i) => ctx.fillText(l, bx+bw/2, a.ly+14+i*17));
+  });
+
+  // REML label
+  ctx.fillStyle = GOLD; ctx.font = 'bold 10px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('Estimated by REML · lme4 package in R · Bootstrap 95% CI (1000 iterations)', W/2, H-10);
+}
+
+window.addEventListener('load', () => {
+  drawTimeline(); drawCohort(); drawCoef(); drawTraj(); drawEqMap();
+});
+window.addEventListener('resize', () => {
+  drawTimeline(); drawCohort(); drawCoef(); drawTraj(); drawEqMap();
+});
+</script>
+</body>
+</html>

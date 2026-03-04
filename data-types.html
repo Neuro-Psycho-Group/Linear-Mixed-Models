@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Types — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.type-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--border-dark);
+  padding: 0; overflow: hidden;
+  margin-bottom: 3.5rem;
+}
+.type-card.longitudinal { border-top-color: #1a6b5c; }
+.type-card.clustered    { border-top-color: #5b3a8a; }
+.type-card.hierarchical { border-top-color: #b5451b; }
+.type-card.nonindep     { border-top-color: #c8930a; }
+
+.type-header {
+  padding: 1.75rem 2rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.2rem 0.6rem; display: inline-block; margin-bottom: 0.75rem;
+}
+.longitudinal .type-badge { background: rgba(26,107,92,0.12); color: #1a6b5c; }
+.clustered    .type-badge { background: rgba(91,58,138,0.12); color: #5b3a8a; }
+.hierarchical .type-badge { background: rgba(181,69,27,0.12); color: #b5451b; }
+.nonindep     .type-badge { background: rgba(200,147,10,0.12); color: #c8930a; }
+
+.type-header h2 { margin: 0 0 0.5rem; font-size: 2rem; }
+.type-header p  { margin: 0; font-size: 0.95rem; max-width: 600px; }
+
+.type-body {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.type-diagram {
+  border-right: 1px solid var(--border);
+  padding: 1.5rem;
+  background: var(--paper);
+}
+.type-text { padding: 1.75rem 2rem; }
+.type-text h3 { margin-top: 0; font-size: 1.3rem; }
+.type-text ul { padding-left: 1.2rem; margin: 0.75rem 0; }
+.type-text li { font-size: 0.9rem; color: var(--ink-faint); margin-bottom: 0.5rem; line-height: 1.6; }
+.type-text li strong { color: var(--ink); }
+
+.example-pill {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem; letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem; margin: 0.2rem 0.2rem 0.2rem 0;
+  background: var(--paper-dark); border: 1px solid var(--border);
+  color: var(--ink-faint);
+}
+
+.heatmap-legend {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  color: var(--ink-ghost); margin-top: 0.5rem;
+}
+.heatmap-legend .swatch {
+  width: 80px; height: 10px;
+  background: linear-gradient(to right, white, #1a2744);
+  border: 1px solid var(--border);
+}
+
+.compare-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border);
+  margin: 3rem 0;
+}
+.cs-cell {
+  background: var(--paper); padding: 1.25rem;
+  text-align: center;
+}
+.cs-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.cs-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--navy); margin-bottom: 0.35rem;
+}
+.cs-desc { font-size: 0.78rem; color: var(--ink-ghost); line-height: 1.5; }
+
+@media (max-width:700px) {
+  .type-body { grid-template-columns: 1fr; }
+  .type-diagram { border-right: none; border-bottom: 1px solid var(--border); }
+  .compare-strip { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+  <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html" class="active">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="clustered · nested · repeated">
+    <div class="hero-eyebrow">Data Types · When LMMs Apply</div>
+    <h1 class="hero-title">Four Kinds of<br><em>Awkward Data</em></h1>
+    <p class="hero-subtitle">
+      LMMs exist because real-world data is messy in specific, predictable ways.
+      <strong>Non-independent, hierarchical, longitudinal, clustered</strong> — these four words describe the same underlying problem from different angles. This page shows you exactly what each looks like, with diagrams.
+    </p>
+  </div>
+
+  <div class="content-wide">
+
+    <!-- Quick overview strip -->
+    <div class="compare-strip">
+      <div class="cs-cell">
+        <div class="cs-icon">🔗</div>
+        <div class="cs-name">Non-Independent</div>
+        <div class="cs-desc">Observations are correlated — knowing one tells you something about another</div>
+      </div>
+      <div class="cs-cell">
+        <div class="cs-icon">⏱️</div>
+        <div class="cs-name">Longitudinal</div>
+        <div class="cs-desc">Same subjects measured repeatedly over time — classic repeated-measures</div>
+      </div>
+      <div class="cs-cell">
+        <div class="cs-icon">🏫</div>
+        <div class="cs-name">Hierarchical / Nested</div>
+        <div class="cs-desc">Units live inside groups, which live inside larger groups — levels of structure</div>
+      </div>
+      <div class="cs-cell">
+        <div class="cs-icon">⬤⬤⬤</div>
+        <div class="cs-name">Clustered</div>
+        <div class="cs-desc">Observations belong to groups — similar within groups, different between groups</div>
+      </div>
+    </div>
+
+    <div class="callout gold">
+      <div class="callout-label">One Root Cause, Four Names</div>
+      <p>All four labels describe data where the <strong>independence assumption of OLS is violated</strong> — observations share some common source of variation (a person, a school, a time period) that makes them more similar to each other than to random observations from outside their group. LMMs handle this by explicitly modelling the group-level variation as random effects.</p>
+    </div>
+
+    <!-- ════════════════════════════════════
+         1. LONGITUDINAL
+    ═════════════════════════════════════ -->
+    <div class="type-card longitudinal">
+      <div class="type-header">
+        <span class="type-badge">Type 01</span>
+        <h2>Longitudinal Data</h2>
+        <p>The same individuals are measured <em>multiple times</em>, typically at regular intervals. Each person contributes a <em>trajectory</em> over time, not just a single data point.</p>
+      </div>
+      <div class="type-body">
+        <div class="type-diagram">
+          <div class="canvas-title">// Diagram: 5 patients, 4 timepoints each — individual trajectories</div>
+          <canvas id="longCanvas" height="240"></canvas>
+          <div class="canvas-note">Each coloured line = one patient's trajectory. They start at different places (different baselines) and change at different rates. OLS would collapse this to one line — losing both baseline differences and trajectory information.</div>
+        </div>
+        <div class="type-text">
+          <h3>What makes it longitudinal</h3>
+          <ul>
+            <li><strong>Same subjects, multiple timepoints.</strong> Patient 7 at week 2, week 4, week 6 — three rows, one person.</li>
+            <li><strong>Rows within a person are correlated.</strong> Week 2 and week 4 for the same patient share their personality, biology, and speaking style. They are not independent.</li>
+            <li><strong>The trajectory is often the thing of interest.</strong> Not just "what is their pause length?" but "how does their pause length change as their depression changes?"</li>
+            <li><strong>Missing timepoints are the norm, not the exception.</strong> Patients drop out, miss appointments. LMMs handle unbalanced longitudinal data; repeated-measures ANOVA does not.</li>
+          </ul>
+          <div style="margin-top:1.25rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:0.5rem;">Real examples</div>
+            <span class="example-pill">Depression PHQ-8 over 52 weeks</span>
+            <span class="example-pill">Blood pressure every 6 months</span>
+            <span class="example-pill">Child reading scores each year</span>
+            <span class="example-pill">Acoustic features per clinical visit</span>
+            <span class="example-pill">Brain volume across aging</span>
+          </div>
+          <div class="callout teal" style="margin-top:1.25rem;">
+            <div class="callout-label">LMM Solution</div>
+            <p style="margin:0;font-size:0.88rem;">Random intercept per patient absorbs each person's baseline. Fixed effect of time captures average trajectory. Random slope per patient allows trajectories to differ in steepness. Residual covariance structure (AR(1)) can model that closer timepoints are more correlated than distant ones.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+         2. CLUSTERED
+    ═════════════════════════════════════ -->
+    <div class="type-card clustered">
+      <div class="type-header">
+        <span class="type-badge">Type 02</span>
+        <h2>Clustered Data</h2>
+        <p>Observations are grouped into <em>clusters</em> — they share a common context that makes them more similar to each other than to observations in other clusters. The cluster is not necessarily ordered in time.</p>
+      </div>
+      <div class="type-body">
+        <div class="type-diagram">
+          <div class="canvas-title">// Diagram: 4 clusters (circles), observations within each</div>
+          <canvas id="clustCanvas" height="240"></canvas>
+          <div class="canvas-note">Points within each circle are more similar to each other than to points in other circles. The between-cluster spread is large; within-cluster spread is smaller. ICC measures this ratio.</div>
+        </div>
+        <div class="type-text">
+          <h3>What makes it clustered</h3>
+          <ul>
+            <li><strong>Observations share a context.</strong> Patients in the same hospital share the same doctors, equipment, and protocols. Students in the same classroom share the same teacher. This shared context makes their outcomes correlated.</li>
+            <li><strong>Clustering is not about time.</strong> You might collect all cluster data at the same moment — a one-off survey of pupils across many schools. It's still clustered because pupils share a school.</li>
+            <li><strong>Ignoring clusters inflates your sample size artificially.</strong> A survey of 500 students in 10 classrooms is not the same as 500 independent people. The effective N is somewhere between 10 and 500.</li>
+            <li><strong>The ICC quantifies how severe the clustering is.</strong> ICC = 0 means no clustering at all. ICC = 1 means everyone in a cluster is identical.</li>
+          </ul>
+          <div style="margin-top:1.25rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:0.5rem;">Real examples</div>
+            <span class="example-pill">Patients within hospitals</span>
+            <span class="example-pill">Students within schools</span>
+            <span class="example-pill">Employees within companies</span>
+            <span class="example-pill">Soil samples within fields</span>
+            <span class="example-pill">Animals within litters</span>
+          </div>
+          <div class="callout" style="border-color:#5b3a8a;margin-top:1.25rem;">
+            <div class="callout-label" style="color:#5b3a8a;">LMM Solution</div>
+            <p style="margin:0;font-size:0.88rem;">Random intercept per cluster absorbs the shared cluster-level context. The fixed effects then estimate what predicts the outcome <em>after</em> controlling for cluster membership. The SE on fixed effects is correct — not inflated by treating clustered observations as independent.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+         3. HIERARCHICAL / NESTED
+    ═════════════════════════════════════ -->
+    <div class="type-card hierarchical">
+      <div class="type-header">
+        <span class="type-badge">Type 03</span>
+        <h2>Hierarchical (Nested) Data</h2>
+        <p>Data has <em>multiple levels of structure</em>, each nested inside the next. Students inside classrooms inside schools inside districts. Observations inside patients inside hospitals inside countries.</p>
+      </div>
+      <div class="type-body">
+        <div class="type-diagram">
+          <div class="canvas-title">// Diagram: 3-level hierarchy — observations → patients → hospitals</div>
+          <canvas id="hierCanvas" height="280"></canvas>
+          <div class="canvas-note">Each level introduces a new source of variability. Hospital differences, patient differences within hospitals, and observation noise within patients are all separate variance components.</div>
+        </div>
+        <div class="type-text">
+          <h3>What makes it hierarchical</h3>
+          <ul>
+            <li><strong>Multiple levels, each nested inside the next.</strong> Level 1: individual observations. Level 2: patients. Level 3: hospitals. Each level is a random sample from a larger population.</li>
+            <li><strong>Variability exists at every level.</strong> Some hospitals are better than others (hospital-level variance). Some patients respond better than others within the same hospital (patient-level variance). Some visits are noisier than others (residual variance).</li>
+            <li><strong>Cross-level interactions are possible.</strong> Does the hospital type moderate the patient-level treatment effect? These cross-level questions are unique to hierarchical models.</li>
+            <li><strong>Higher levels provide context for lower levels.</strong> A patient's outcome might depend both on their own characteristics AND on which hospital they're in. The model needs to know about both.</li>
+          </ul>
+          <div style="margin-top:1.25rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:0.5rem;">Real examples</div>
+            <span class="example-pill">Pupils → classrooms → schools</span>
+            <span class="example-pill">Patients → doctors → hospitals</span>
+            <span class="example-pill">Repeated measures → patients → clinics</span>
+            <span class="example-pill">Animals → litters → farms</span>
+          </div>
+          <div class="callout rust" style="margin-top:1.25rem;">
+            <div class="callout-label">LMM Solution</div>
+            <p style="margin:0;font-size:0.88rem;">Add a random intercept at <em>each</em> level: <code>(1|hospital/patient)</code> in R syntax. This estimates the variance at each level separately and propagates correct uncertainty through all levels. You get hospital-level and patient-level variance components, and fixed effects that are adjusted for both.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+         4. NON-INDEPENDENT
+    ═════════════════════════════════════ -->
+    <div class="type-card nonindep">
+      <div class="type-header">
+        <span class="type-badge">Type 04 · The Root Concept</span>
+        <h2>Non-Independent Data</h2>
+        <p><em>The general case that contains all the others.</em> Two observations are non-independent if knowing one tells you something about the other — if their residuals are correlated after accounting for the predictors.</p>
+      </div>
+      <div class="type-body">
+        <div class="type-diagram">
+          <div class="canvas-title">// Correlation heatmap: residuals from a 12-row dataset with 3 patients</div>
+          <canvas id="heatCanvas" height="240"></canvas>
+          <div class="heatmap-legend">
+            <span>Low correlation</span>
+            <div class="swatch"></div>
+            <span>High correlation</span>
+          </div>
+          <div class="canvas-note" style="margin-top:0.5rem;">Dark blocks along the diagonal = within-patient rows are highly correlated with each other. Off-diagonal light cells = across-patient rows are uncorrelated. OLS assumes the entire matrix is identity (no correlation anywhere). It's clearly not.</div>
+        </div>
+        <div class="type-text">
+          <h3>The OLS independence assumption — spelt out</h3>
+          <p style="font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:0.75rem;">OLS assumes the residuals ε follow <strong>N(0, σ²I)</strong>. The I (identity matrix) says: the covariance between any two residuals εᵢ and εⱼ is zero. Every observation is as unrelated to every other as two strangers.</p>
+          <p style="font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:0.75rem;">When data is longitudinal, clustered, or hierarchical, this is false. The actual residual covariance matrix looks like the heatmap on the left — a block-diagonal structure where within-group residuals are correlated.</p>
+          <p style="font-size:0.9rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1rem;">LMMs model this explicitly. By adding random effects u, the implied covariance of Y becomes:</p>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:0.82rem; background:var(--paper); border-left:3px solid var(--gold); padding:0.9rem 1.2rem; line-height:1.9; margin-bottom:1rem;">
+            Var(Y) = Z·G·Zᵀ + R<br>
+            <span style="color:var(--ink-ghost); font-size:0.72rem;">Z·G·Zᵀ = between-group variance (block structure)<br>R = within-group residual variance</span>
+          </div>
+          <p style="font-size:0.9rem; color:var(--ink-faint); line-height:1.7;">This matches the heatmap structure exactly. The LMM is, at its core, a method for estimating the correct covariance structure of Y — and then doing regression in a way that respects that structure.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW TO DIAGNOSE YOUR DATA -->
+    <div class="section-marker"><div class="sm-num">★</div><div class="sm-line"></div><div class="sm-label">Diagnostic Questions</div></div>
+
+    <h2>How to recognise which type <em>you have</em></h2>
+    <p>In practice, your data often has multiple types of structure simultaneously (e.g., longitudinal AND hierarchical). Ask these questions:</p>
+
+    <div style="background:white; border:1px solid var(--border); padding:2rem; margin:1.5rem 0;">
+      <canvas id="flowCanvas" height="380"></canvas>
+    </div>
+
+    <div class="callout navy">
+      <div class="callout-label">Next: How to actually analyse each type</div>
+      <p>Now that you can recognise your data structure, the Applications page walks through the logical workflow for each scenario — the scientist's decision algorithm from data to interpretation. <a href="applications.html" style="color:var(--gold);">Applications →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · Data Types · When LMMs Apply</p></footer>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+const PAT_COLS = ['#5b3a8a','#1a6b5c','#b5451b','#1a2744','#c8930a'];
+
+function setup(id, h) {
+  const c = document.getElementById(id); if (!c) return null;
+  const W = c.parentElement.clientWidth - (c.parentElement.classList.contains('type-diagram') ? 48 : 32);
+  c.width = W*DPR; c.height = h*DPR;
+  c.style.width = W+'px'; c.style.height = h+'px';
+  const ctx = c.getContext('2d'); ctx.scale(DPR,DPR);
+  ctx.fillStyle='white'; ctx.fillRect(0,0,W,h);
+  return {ctx,W,H:h};
+}
+
+// ── LONGITUDINAL ─────────────────────────────────────
+function drawLong() {
+  const s=setup('longCanvas',240); if(!s) return;
+  const {ctx,W,H}=s;
+  const pad=40;
+  const times=[0,1,2,3];
+  const baselines=[0.8, -0.4, 1.5, 0.1, -0.9];
+  const slopes=[0.3, 0.15, -0.1, 0.4, 0.25];
+
+  // Axes
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  ctx.fillStyle='#aaa'; ctx.font='11px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ['W1','W2','W3','W4'].forEach((t,i)=>{
+    const x=pad+(i/3)*(W-2*pad);
+    ctx.fillText(t, x, H-pad+16);
+  });
+  ctx.fillStyle='#aaa'; ctx.font='10px Source Serif 4,serif';
+  ctx.fillText('Time →', W/2, H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Outcome', 0,0); ctx.restore();
+
+  const toX=i=>pad+(i/3)*(W-2*pad);
+  const toY=v=>H-pad-((v-(-1.5))/(3.5)*(H-2*pad));
+
+  // Missing data example: patient 2 missing W3
+  const missing={2:2};
+
+  baselines.forEach((b,p)=>{
+    const pts=times.map(t=>({t,y:b+slopes[p]*t+(Math.random()-0.5)*0.15}))
+                    .filter((_,i)=>!(p===2&&i===2));
+    ctx.strokeStyle=PAT_COLS[p]; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath();
+    pts.forEach((pt,i)=>{ i===0?ctx.moveTo(toX(pt.t),toY(pt.y)):ctx.lineTo(toX(pt.t),toY(pt.y)); });
+    ctx.stroke();
+    pts.forEach(pt=>{
+      ctx.fillStyle=PAT_COLS[p];
+      ctx.beginPath(); ctx.arc(toX(pt.t),toY(pt.y),5,0,Math.PI*2); ctx.fill();
+    });
+    // Label
+    const last=pts[pts.length-1];
+    ctx.fillStyle=PAT_COLS[p]; ctx.font='bold 10px JetBrains Mono,monospace';
+    ctx.textAlign='left';
+    ctx.fillText(`P${p+1}`, toX(last.t)+7, toY(last.y)+4);
+  });
+
+  // Missing data annotation
+  ctx.fillStyle='#b5451b'; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('? (missing)', toX(2), H-pad-20);
+  ctx.strokeStyle='#b5451b'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+  ctx.beginPath(); ctx.arc(toX(2),toY(baselines[2]+slopes[2]*2),8,0,Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ── CLUSTERED ────────────────────────────────────────
+function drawClust() {
+  const s=setup('clustCanvas',240); if(!s) return;
+  const {ctx,W,H}=s;
+  const clusters=[
+    {cx:W*0.22,cy:H*0.35,r:55,col:PAT_COLS[0],n:7},
+    {cx:W*0.65,cy:H*0.28,r:48,col:PAT_COLS[1],n:6},
+    {cx:W*0.55,cy:H*0.72,r:52,col:PAT_COLS[2],n:8},
+    {cx:W*0.18,cy:H*0.75,r:40,col:PAT_COLS[3],n:5},
+  ];
+  const labels=['Hospital A','Hospital B','Hospital C','Hospital D'];
+
+  clusters.forEach((cl,ci)=>{
+    // Outer circle
+    ctx.strokeStyle=cl.col; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+    ctx.globalAlpha=0.4;
+    ctx.beginPath(); ctx.arc(cl.cx,cl.cy,cl.r,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=1; ctx.setLineDash([]);
+    // Fill
+    ctx.fillStyle=cl.col; ctx.globalAlpha=0.05;
+    ctx.beginPath(); ctx.arc(cl.cx,cl.cy,cl.r,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Points inside
+    const rng=(seed)=>{ let s=seed; return ()=>{ s=(s*16807+0)%2147483647; return(s-1)/2147483646; }; };
+    const rand=rng(ci*137);
+    for(let i=0;i<cl.n;i++){
+      const angle=rand()*Math.PI*2;
+      const dist=rand()*(cl.r-14);
+      const px=cl.cx+Math.cos(angle)*dist;
+      const py=cl.cy+Math.sin(angle)*dist;
+      ctx.fillStyle=cl.col;
+      ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+    }
+
+    // Label
+    ctx.fillStyle=cl.col; ctx.font='bold 10px JetBrains Mono,monospace';
+    ctx.textAlign='center';
+    ctx.fillText(labels[ci], cl.cx, cl.cy+cl.r+14);
+  });
+
+  // ICC annotation
+  ctx.fillStyle='#c8930a'; ctx.font='10px JetBrains Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText('ICC = between-cluster var / total var', W-8, H-6);
+}
+
+// ── HIERARCHICAL ─────────────────────────────────────
+function drawHier() {
+  const s=setup('hierCanvas',280); if(!s) return;
+  const {ctx,W,H}=s;
+
+  const levels=[
+    {label:'Hospital', y:30, nodes:[{x:W/2,label:'Hosp A'},{x:W/2+1,label:''}], col:'#b5451b'},
+    {label:'Patient',  y:110,nodes:[{x:W*0.28,label:'Patient 1'},{x:W*0.5,label:'Patient 2'},{x:W*0.72,label:'Patient 3'}], col:'#5b3a8a'},
+    {label:'Visit',    y:195,nodes:[{x:W*0.15,label:'v1'},{x:W*0.28,label:'v2'},{x:W*0.38,label:'v3'},{x:W*0.5,label:'v4'},{x:W*0.61,label:'v5'},{x:W*0.72,label:'v6'},{x:W*0.84,label:'v7'}], col:'#1a6b5c'},
+  ];
+
+  // Level labels on left
+  const levelNames=['Level 3\nHospital','Level 2\nPatient','Level 1\nVisit'];
+  levels.forEach((lv,li)=>{
+    ctx.fillStyle=lv.col; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(levelNames[li].split('\n')[0], 4, lv.y+4);
+    ctx.fillStyle='#aaa';
+    ctx.fillText(levelNames[li].split('\n')[1], 4, lv.y+16);
+
+    // Variance bracket
+    if(li<2){
+      const bx=W-50;
+      ctx.strokeStyle=lv.col+'88'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+      ctx.beginPath(); ctx.moveTo(bx, lv.y); ctx.lineTo(bx+8,lv.y); ctx.moveTo(bx+8,lv.y); ctx.lineTo(bx+8,levels[li+1].y); ctx.lineTo(bx,levels[li+1].y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=lv.col; ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='center';
+      ctx.fillText('σ²', bx+20, (lv.y+levels[li+1].y)/2+4);
+    }
+  });
+
+  // Hospital node
+  const hx=W/2, hy=levels[0].y;
+  ctx.fillStyle='#b5451b';
+  ctx.beginPath(); ctx.arc(hx,hy,16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white'; ctx.font='bold 9px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('A',hx,hy+4);
+
+  // Patient nodes + edges from hospital
+  const pnodes=[{x:W*0.28},{x:W*0.5},{x:W*0.72}];
+  pnodes.forEach((pn,pi)=>{
+    // Edge
+    ctx.strokeStyle='#b5451b44'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(hx,hy+16); ctx.lineTo(pn.x,levels[1].y-14); ctx.stroke();
+    // Node
+    ctx.fillStyle='#5b3a8a';
+    ctx.beginPath(); ctx.arc(pn.x,levels[1].y,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.font='bold 8px JetBrains Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(`P${pi+1}`,pn.x,levels[1].y+3);
+  });
+
+  // Visit nodes
+  const visitMap={0:[0,1],1:[2,3,4],2:[5,6]};
+  const vnodes=[{x:W*0.15},{x:W*0.28},{x:W*0.38},{x:W*0.50},{x:W*0.61},{x:W*0.72},{x:W*0.84}];
+  pnodes.forEach((pn,pi)=>{
+    visitMap[pi].forEach(vi=>{
+      const vn=vnodes[vi];
+      ctx.strokeStyle='#5b3a8a44'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pn.x,levels[1].y+14); ctx.lineTo(vn.x,levels[2].y-8); ctx.stroke();
+      ctx.fillStyle='#1a6b5c';
+      ctx.beginPath(); ctx.arc(vn.x,levels[2].y,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='white'; ctx.font='7px JetBrains Mono,monospace'; ctx.textAlign='center';
+      ctx.fillText(`v${vi+1}`,vn.x,levels[2].y+3);
+    });
+  });
+
+  // Variance labels bottom
+  ctx.fillStyle='#aaa'; ctx.font='9px Source Serif 4,serif'; ctx.textAlign='left';
+  ctx.fillText('σ²_hospital  +  σ²_patient  +  σ²_residual  =  Var(Y)', 24, H-10);
+}
+
+// ── HEATMAP ───────────────────────────────────────────
+function drawHeat() {
+  const s=setup('heatCanvas',240); if(!s) return;
+  const {ctx,W,H}=s;
+  const n=12, pad=50;
+  const cw=(W-pad-20)/n, ch=(H-pad-20)/n;
+
+  // Patient assignment
+  const patient=Array.from({length:12},(_,i)=>Math.floor(i/3));
+
+  // Colour mapping
+  const cellX=i=>pad+i*cw+cw/2;
+  const cellY=i=>pad+i*ch+ch/2;
+
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      const corr=patient[i]===patient[j]?(i===j?1:0.72):0.02;
+      const r=Math.round(255*(1-corr)), g=Math.round(255*(1-corr)), b=Math.round(255*(1-corr*0.4));
+      const v=Math.round(255*(1-corr));
+      const dark=Math.round(26+(1-corr)*(200-26));
+      // deep navy to white
+      const rr=Math.round(26+corr*(26-26)), gg=Math.round(39+corr*(39-39)), bb=Math.round(68+corr*(68-68));
+      const rv=Math.round(255*(1-corr));
+      ctx.fillStyle=i===j?'#b5451b':`rgb(${rv},${rv},${Math.round(rv*0.85+(corr*0.7)*55)})`;
+      ctx.fillRect(pad+j*cw, pad+i*ch, cw-1, ch-1);
+    }
+  }
+
+  // Row/col labels
+  const pLabels=['A','A','A','A','B','B','B','B','C','C','C','C'];
+  ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='center';
+  for(let i=0;i<n;i++){
+    ctx.fillStyle=['#5b3a8a','#1a6b5c','#b5451b'][patient[i]];
+    ctx.fillText(pLabels[i], cellX(i), pad-6);
+    ctx.fillText(pLabels[i], 28, cellY(i)+3);
+  }
+
+  // Legend
+  ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('Rows & cols = observations (A/B/C = patient)', pad, H-4);
+}
+
+// ── DIAGNOSTIC FLOWCHART ─────────────────────────────
+function drawFlow() {
+  const s=setup('flowCanvas',380); if(!s) return;
+  const {ctx,W,H}=s;
+
+  const box=(x,y,w,h,col,text,sub)=>{
+    ctx.fillStyle=col+'18'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+    ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=col; ctx.font='bold 11px Source Serif 4,serif'; ctx.textAlign='center';
+    ctx.fillText(text,x+w/2,y+h/2+(sub?-4:4));
+    if(sub){ ctx.fillStyle='#9090aa'; ctx.font='9px JetBrains Mono,monospace'; ctx.fillText(sub,x+w/2,y+h/2+10); }
+  };
+  const arr=(x1,y1,x2,y2,label)=>{
+    ctx.strokeStyle='#b8ae96'; ctx.lineWidth=1; ctx.setLineDash([3,2]);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]);
+    // arrowhead
+    const angle=Math.atan2(y2-y1,x2-x1);
+    ctx.fillStyle='#b8ae96';
+    ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x2-8*Math.cos(angle-0.4),y2-8*Math.sin(angle-0.4)); ctx.lineTo(x2-8*Math.cos(angle+0.4),y2-8*Math.sin(angle+0.4)); ctx.closePath(); ctx.fill();
+    if(label){ ctx.fillStyle='#aaa'; ctx.font='9px Source Serif 4,serif'; ctx.textAlign='center'; ctx.fillText(label,(x1+x2)/2,(y1+y2)/2-5); }
+  };
+  const diamond=(x,y,w,h,col,text)=>{
+    ctx.fillStyle=col+'15'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x+w/2,y); ctx.lineTo(x+w,y+h/2); ctx.lineTo(x+w/2,y+h); ctx.lineTo(x,y+h/2); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle=col; ctx.font='bold 10px Source Serif 4,serif'; ctx.textAlign='center';
+    ctx.fillText(text,x+w/2,y+h/2+4);
+  };
+
+  // Q1
+  diamond(W/2-90, 10, 180, 60, '#c8930a', 'Same subjects measured >1×?');
+  arr(W/2,70,W/2,105,'');
+  // Yes → longitudinal
+  box(W/2-75,105,150,42,'#1a6b5c','Longitudinal','→ random intercept + time');
+  arr(W/2,147,W/2,188,'');
+
+  // Q2
+  diamond(W/2-95,188,190,60,'#5b3a8a','Obs. grouped into natural clusters?');
+  // No branch left
+  arr(W/2-95,218,W/2-200,218,'No');
+  box(14,200,130,36,'#9090aa','Standard LMM\nmay not be needed','check independence');
+  // Yes → right
+  arr(W/2+95,218,W/2+140,218,'Yes');
+  // Q3 right side
+  diamond(W/2+140,188,170,60,'#b5451b','Multiple levels\nof nesting?');
+  arr(W/2+225,218,W/2+225,280,'');
+  box(W-195,270,165,42,'#b5451b','Hierarchical LMM','(1|group/subgroup)');
+
+  // From clustered → clustered box
+  arr(W/2,248,W/2,280,'');
+  box(W/2-80,280,160,42,'#5b3a8a','Clustered LMM','(1|cluster)');
+
+  // Q4 — outcome distribution
+  arr(W/2,322,W/2,358,'');
+  diamond(W/2-105,358,210,0,'#c8930a','');
+  ctx.fillStyle='#c8930a'; ctx.font='10px Source Serif 4,serif'; ctx.textAlign='center';
+  ctx.fillText('Outcome normal? → LMM   |   Binary/count? → GLMM', W/2, 372);
+}
+
+window.addEventListener('load',()=>{ drawLong();drawClust();drawHier();drawHeat();drawFlow(); });
+window.addEventListener('resize',()=>{ drawLong();drawClust();drawHier();drawHeat();drawFlow(); });
+</script>
+</body>
+</html>

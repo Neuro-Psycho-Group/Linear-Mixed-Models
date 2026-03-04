@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLMM — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.outcome-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); margin:2rem 0; }
+.oc-cell { background:white; padding:1.25rem; text-align:center; }
+.oc-icon { font-size:2rem; margin-bottom:0.5rem; }
+.oc-type { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:700; color:var(--navy); margin-bottom:0.25rem; }
+.oc-ex { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--ink-ghost); letter-spacing:0.05em; margin-bottom:0.5rem; }
+.oc-link { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--rust); background:rgba(181,69,27,0.08); padding:0.2rem 0.5rem; display:inline-block; }
+.oc-cell.lmm { border-top:3px solid var(--teal); }
+.oc-cell.glmm { border-top:3px solid var(--rust); }
+
+.link-demo { background:white; border:1px solid var(--border); padding:1.5rem; margin:2rem 0; }
+.link-row { display:grid; grid-template-columns:1fr auto 1fr; gap:1.5rem; align-items:center; margin:1.5rem 0; }
+.link-box { background:var(--paper); border:1px solid var(--border); padding:1rem 1.25rem; text-align:center; }
+.link-box .lb-label { font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-ghost); margin-bottom:0.4rem; }
+.link-box .lb-eq { font-family:'JetBrains Mono',monospace; font-size:0.9rem; color:var(--navy); }
+.link-arrow { text-align:center; }
+.link-name { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--rust); background:rgba(181,69,27,0.1); padding:0.2rem 0.6rem; display:inline-block; }
+
+.integral-vis { background:white; border:1px solid var(--border); padding:1.75rem; margin:2rem 0; }
+.approx-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); margin:2rem 0; }
+.ap-cell { background:white; padding:1.5rem; }
+.ap-num { font-family:'Cormorant Garamond',serif; font-size:2.5rem; font-weight:700; color:var(--border-dark); line-height:1; margin-bottom:0.4rem; }
+.ap-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:700; color:var(--navy); margin-bottom:0.4rem; }
+.ap-desc { font-size:0.85rem; color:var(--ink-faint); line-height:1.6; }
+.ap-verdict { font-family:'JetBrains Mono',monospace; font-size:0.68rem; letter-spacing:0.08em; color:var(--teal); background:rgba(26,107,92,0.1); padding:0.2rem 0.5rem; display:inline-block; margin-top:0.5rem; }
+.ap-verdict.warn { color:var(--rust); background:rgba(181,69,27,0.1); }
+
+@media(max-width:700px){
+  .outcome-grid { grid-template-columns:1fr 1fr; }
+  .approx-grid { grid-template-columns:1fr; }
+  .link-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+  <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html" class="active">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="g(E[y|u]) = Xβ + Zu">
+    <div class="hero-eyebrow">Extension · Generalised Linear Mixed Models</div>
+    <h1 class="hero-title">When Y Isn't<br><em>Normal</em></h1>
+    <p class="hero-subtitle">
+      LMMs assume your outcome is normally distributed. But remission (yes/no) is binary. PHQ-8 is a count. Severity ratings are ordinal. <strong>GLMMs extend LMMs to any outcome type</strong> — by adding one extra layer: a link function.
+    </p>
+  </div>
+
+  <div class="content-area">
+
+    <!-- WHY NORMAL ISN'T ALWAYS RIGHT -->
+    <div class="section-marker"><div class="sm-num">1</div><div class="sm-line"></div><div class="sm-label">The Problem with LMM for Non-Normal Outcomes</div></div>
+
+    <h2>What happens when you use LMM on binary data</h2>
+    <p>Suppose your outcome is whether a patient is in remission (1 = yes, 0 = no). If you fit a standard LMM, the model will happily predict values like 1.4 or −0.3 — which are nonsensical probabilities. The linear predictor Xβ + Zu lives on (−∞, +∞), but probabilities live on [0, 1]. You need something to map between these two spaces.</p>
+
+    <div class="fig-wrap" style="background:white; border:1px solid var(--border); padding:1.5rem; margin:2rem 0;">
+      <div class="canvas-title">// Figure: LMM vs GLMM for binary outcome — why LMM predictions go out of bounds</div>
+      <canvas id="boundCanvas" height="240"></canvas>
+      <div class="fig-caption">Left: LMM fitted line passes below 0 and above 1 — impossible probabilities. Right: GLMM logistic curve stays bounded within [0,1] everywhere. The S-shape reflects the logistic link function mapping the linear predictor back to probability space.</div>
+    </div>
+
+    <!-- OUTCOME TYPES -->
+    <div class="section-marker"><div class="sm-num">2</div><div class="sm-line"></div><div class="sm-label">Matching Outcome Type to Model</div></div>
+
+    <h2>Which model for which <em>outcome type</em>?</h2>
+
+    <div class="outcome-grid">
+      <div class="oc-cell lmm">
+        <div class="oc-icon">📏</div>
+        <div class="oc-type">Continuous</div>
+        <div class="oc-ex">pause_z, reaction time, blood pressure</div>
+        <div class="oc-link">LMM · identity link</div>
+      </div>
+      <div class="oc-cell glmm">
+        <div class="oc-icon">🔘</div>
+        <div class="oc-type">Binary</div>
+        <div class="oc-ex">remission yes/no, event occurred, correct/incorrect</div>
+        <div class="oc-link">GLMM · logit link</div>
+      </div>
+      <div class="oc-cell glmm">
+        <div class="oc-icon">🔢</div>
+        <div class="oc-type">Count</div>
+        <div class="oc-ex">number of episodes, hospital admissions, word errors</div>
+        <div class="oc-link">GLMM · log link</div>
+      </div>
+      <div class="oc-cell glmm">
+        <div class="oc-icon">📊</div>
+        <div class="oc-type">Ordinal</div>
+        <div class="oc-ex">Likert scale, severity rating 1–5, PHQ-8 score</div>
+        <div class="oc-link">GLMM · cumulative logit</div>
+      </div>
+    </div>
+
+    <div class="callout gold">
+      <div class="callout-label">Wait — is PHQ-8 a count?</div>
+      <p>PHQ-8 is technically an ordinal sum score (0–24). In practice, researchers often treat it as approximately continuous and use LMM — especially after confirming residuals look roughly normal. This is a pragmatic choice. If PHQ-8 values are very skewed (many zeros, few highs) or your sample is small, a GLMM with an appropriate family is more rigorous.</p>
+    </div>
+
+    <!-- THE LINK FUNCTION -->
+    <div class="section-marker"><div class="sm-num">3</div><div class="sm-line"></div><div class="sm-label">The Link Function</div></div>
+
+    <h2>What a link function <em>actually does</em></h2>
+    <p>The GLMM equation from Wikipedia is: <strong>g(E[y|u]) = Xβ + Zu</strong>. This says: apply function g() to the expected value of y (given random effects u), and that equals the familiar linear predictor. The link function g() is a one-way bridge between the natural scale of y and the unconstrained linear predictor.</p>
+
+    <div class="link-demo">
+      <div class="canvas-title">// Three common link functions — what they do and why</div>
+
+      <!-- Logit link -->
+      <div class="link-row">
+        <div class="link-box">
+          <div class="lb-label">Outcome scale</div>
+          <div class="lb-eq">Probability p ∈ [0, 1]</div>
+        </div>
+        <div class="link-arrow">
+          <div class="link-name">logit link</div><br>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#aaa;">g(p) = log(p/1−p)</span>
+        </div>
+        <div class="link-box">
+          <div class="lb-label">Linear predictor scale</div>
+          <div class="lb-eq">log-odds ∈ (−∞, +∞)</div>
+        </div>
+      </div>
+      <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.65; margin-bottom:1.25rem;">The logit of a probability is the log of the odds ratio: log(p / (1−p)). A probability of 0.5 maps to logit = 0. A probability of 0.9 maps to logit = 2.2. A probability of 0.01 maps to logit = −4.6. The logit can be any real number — so the linear predictor (Xβ + Zu) can take any value, and you invert g to get back to probability: p = 1/(1+exp(−Xβ−Zu)). This is the <em>sigmoid/logistic</em> function.</p>
+
+      <!-- Log link -->
+      <div class="link-row">
+        <div class="link-box">
+          <div class="lb-label">Outcome scale</div>
+          <div class="lb-eq">Count λ ∈ [0, ∞)</div>
+        </div>
+        <div class="link-arrow">
+          <div class="link-name">log link</div><br>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#aaa;">g(λ) = log(λ)</span>
+        </div>
+        <div class="link-box">
+          <div class="lb-label">Linear predictor scale</div>
+          <div class="lb-eq">log-rate ∈ (−∞, +∞)</div>
+        </div>
+      </div>
+      <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.65;">The log link ensures the model never predicts negative counts. The linear predictor Xβ + Zu lives on (−∞, +∞), but exp(Xβ + Zu) is always positive. Coefficients from a log-link model are interpreted as multiplicative effects on the rate: eᵝ is the rate ratio.</p>
+    </div>
+
+    <div class="fig-wrap" style="background:white; border:1px solid var(--border); padding:1.5rem; margin:2rem 0;">
+      <div class="canvas-title">// Figure: The logit link — mapping probability [0,1] ↔ log-odds (−∞,+∞)</div>
+      <canvas id="linkCanvas" height="260"></canvas>
+      <div class="fig-caption">Left panel: the sigmoid/logistic function — mapping any linear predictor value to a probability. Right panel: the logit function (its inverse) — mapping any probability to the unconstrained log-odds scale. The S-shape ensures the model stays in [0,1] even when Xβ+Zu is very large or very small.</div>
+    </div>
+
+    <!-- THE INTEGRAL PROBLEM -->
+    <div class="section-marker"><div class="sm-num">4</div><div class="sm-line"></div><div class="sm-label">The Hard Part: No Closed Form</div></div>
+
+    <h2>Why GLMMs are computationally harder than LMMs</h2>
+    <p>For a standard LMM with normal outcomes, the random effects u can be integrated out analytically — there's a clean closed-form solution. For GLMMs, this is no longer possible.</p>
+
+    <p>The Wikipedia equation for the <em>marginal likelihood</em> (the probability of the data, having integrated out the random effects) is:</p>
+
+    <div style="background:var(--ink); color:#ccc; font-family:'JetBrains Mono',monospace; font-size:0.85rem; padding:1.5rem 2rem; margin:1.5rem 0; line-height:2.2; overflow-x:auto;">
+      <span style="color:#555;">// The likelihood we want to maximise:</span><br>
+      p(y) = ∫ p(y|u) · p(u) du<br><br>
+      <span style="color:#555;">// What each piece means:</span><br>
+      <span style="color:#76d7c4;">p(y|u)</span>  = probability of data given random effects = GLM likelihood<br>
+      <span style="color:#f9c74f;">p(u)</span>    = probability of random effects = N(0, G) (normal prior on u)<br>
+      <span style="color:#f08080;">∫ ... du</span> = sum over ALL possible values of u — an infinite-dimensional integral
+    </div>
+
+    <div class="integral-vis">
+      <div class="canvas-title">// Figure: Why the integral is hard — visualising ∫ p(y|u) · p(u) du</div>
+      <canvas id="integralCanvas" height="260"></canvas>
+      <div class="fig-caption">
+        <strong>What this integral is doing:</strong> For every possible value of the random effect u (x-axis), we compute how likely the data is given that u (blue curve) and how likely that u is in the population (orange curve). We multiply these and sum up the area under the product. In LMM, the product of two normals is still normal — closed form. In GLMM, p(y|u) is a logistic or Poisson, and the product has no simple form. We must approximate numerically.
+      </div>
+    </div>
+
+    <!-- APPROXIMATION METHODS -->
+    <div class="section-marker"><div class="sm-num">5</div><div class="sm-line"></div><div class="sm-label">How Software Solves It</div></div>
+
+    <h2>Three approximation strategies</h2>
+    <p>Because the GLMM integral has no closed form, software uses one of three numerical strategies. Here's what each does and when to use it:</p>
+
+    <div class="approx-grid">
+      <div class="ap-cell">
+        <div class="ap-num">GH</div>
+        <div class="ap-title">Gauss-Hermite Quadrature</div>
+        <div class="ap-desc">Approximates the integral by evaluating the integrand at a fixed set of carefully chosen points (quadrature points) and summing up the weighted values. More quadrature points → more accurate, but slower. The gold standard for accuracy when feasible.</div>
+        <div class="ap-desc" style="margin-top:0.75rem;"><strong>Limitation:</strong> Computational cost grows exponentially with the number of random effects. Fine with 1–2 random effects; impractical with 10+.</div>
+        <span class="ap-verdict">✓ Best accuracy (low-dimensional)</span>
+      </div>
+      <div class="ap-cell">
+        <div class="ap-num">LA</div>
+        <div class="ap-title">Laplace Approximation</div>
+        <div class="ap-desc">Instead of computing the integral exactly, Laplace's method approximates the integrand with a normal distribution centred at its mode (peak). The integral of a normal is easy to compute analytically.</div>
+        <div class="ap-desc" style="margin-top:0.75rem;"><strong>Intuition:</strong> Near its peak, almost any smooth function looks like a bell curve if you zoom in. Laplace approximation capitalises on this. The approximation is exact when the integrand truly is normal — which it is for LMMs but only approximately for GLMMs.</div>
+        <span class="ap-verdict">✓ Fast, widely used (glmer default)</span>
+      </div>
+      <div class="ap-cell">
+        <div class="ap-num">PQL</div>
+        <div class="ap-title">Penalised Quasi-Likelihood</div>
+        <div class="ap-desc">PQL reformulates the GLMM as a weighted normal mixed model with a "working response" — a linearised approximation of the actual outcome. It then repeatedly refits this normal LMM (hence "doubly iterative") until convergence.</div>
+        <div class="ap-desc" style="margin-top:0.75rem;"><strong>Limitation:</strong> PQL can produce biased estimates, especially for binary outcomes with low event rates or small clusters. Generally not recommended for modern analyses unless the dataset is very large.</div>
+        <span class="ap-verdict warn">⚠ Use with caution — bias risk</span>
+      </div>
+    </div>
+
+    <div class="callout teal">
+      <div class="callout-label">What this means in practice for your research</div>
+      <p>In R, <code>glmer(remission ~ phq8 + (1|patient), family=binomial)</code> uses Laplace approximation by default. For more accurate inference, use <code>nAGQ=5</code> or higher (Gauss-Hermite with 5 quadrature points). If your model has many random effects or fails to converge, consider Bayesian alternatives (Stan/brms) which use MCMC to sample the exact posterior rather than approximating it.</p>
+    </div>
+
+    <!-- GLMM vs LMM COMPARISON -->
+    <div class="section-marker"><div class="sm-num">6</div><div class="sm-line"></div><div class="sm-label">Side by Side</div></div>
+
+    <h2>LMM vs GLMM — <em>the full comparison</em></h2>
+
+    <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin:1.5rem 0;">
+      <thead>
+        <tr style="background:var(--navy); color:white;">
+          <th style="padding:0.6rem 1rem; text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;">Property</th>
+          <th style="padding:0.6rem 1rem; text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;">LMM</th>
+          <th style="padding:0.6rem 1rem; text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;">GLMM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Equation</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.8rem;">Y = Xβ + Zu + ε</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.8rem;">g(E[Y|u]) = Xβ + Zu</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border); background:var(--paper);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Outcome assumed</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Normal (Gaussian)</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Any exponential family (binomial, Poisson, etc.)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Link function</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Identity (g = no transformation)</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">logit, log, probit, cumulative logit…</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border); background:var(--paper);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Likelihood</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Closed form (analytically tractable)</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">No closed form — requires numerical approximation</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Estimation</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">REML or ML</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Laplace, GH quadrature, PQL, or MCMC</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border); background:var(--paper);">
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">Coefficient interpretation</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">Direct: "1-unit increase in X → β units increase in Y"</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint);">On link scale: log-odds ratio (logit), rate ratio (log)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.65rem 1rem; color:var(--ink); font-weight:600;">R function</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.8rem;">lmer() from lme4</td>
+          <td style="padding:0.65rem 1rem; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; font-size:0.8rem;">glmer() from lme4; brm() from brms</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout navy" style="margin-top:3rem;">
+      <div class="callout-label">Where GLMMs appear in the RADAR-CNS pipeline</div>
+      <p>In Phase 5 (ML classification), the outcome is binary: PHQ-8 ≥ 10 vs &lt;10. If you wanted to do this statistically rather than with a machine learning classifier, a GLMM with logistic link would be the right tool — it would give you interpretable odds ratios for each acoustic feature, properly accounting for repeated measures. The ML classifier is more flexible but less interpretable. Both have their place.</p>
+      <p style="margin-bottom:0;"><a href="radar.html" style="color:var(--gold);">Review RADAR-CNS pipeline →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · GLMM Extension</p></footer>
+
+<script>
+const DPR = window.devicePixelRatio||1;
+function setupC(id,h){
+  const c=document.getElementById(id); if(!c) return null;
+  const W=c.parentElement.clientWidth-48;
+  c.width=W*DPR; c.height=h*DPR; c.style.width=W+'px'; c.style.height=h+'px';
+  const ctx=c.getContext('2d'); ctx.scale(DPR,DPR);
+  ctx.fillStyle='white'; ctx.fillRect(0,0,W,h);
+  return {ctx,W,H:h};
+}
+
+// Figure: LMM out-of-bounds vs GLMM sigmoid
+function drawBound(){
+  const s=setupC('boundCanvas',240); if(!s)return;
+  const {ctx,W,H}=s;
+  const pad=45, mid=W/2;
+
+  // LEFT PANEL — LMM goes out of bounds
+  const lpad=pad, rpad=mid-10;
+  const toXL=v=>lpad+(v-(-2))/(26-(-2))*(rpad-lpad);
+  const toY=v=>H-pad-((v-(-0.4))/(1.5)*(H-2*pad));
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lpad,pad); ctx.lineTo(lpad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lpad,H-pad); ctx.lineTo(rpad,H-pad); ctx.stroke();
+  // 0 and 1 lines
+  const y0=toY(0), y1=toY(1);
+  ctx.strokeStyle='#1a6b5c'; ctx.lineWidth=1; ctx.setLineDash([3,2]);
+  ctx.beginPath(); ctx.moveTo(lpad,y0); ctx.lineTo(rpad,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lpad,y1); ctx.lineTo(rpad,y1); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#1a6b5c'; ctx.font='9px JetBrains Mono'; ctx.textAlign='right';
+  ctx.fillText('p=1',lpad-2,y1+3); ctx.fillText('p=0',lpad-2,y0+3);
+
+  // LMM line — goes below 0 and above 1
+  ctx.strokeStyle='#b5451b'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(toXL(-2),toY(-0.3)); ctx.lineTo(toXL(26),toY(1.3)); ctx.stroke();
+  // Violation zones
+  ctx.fillStyle='rgba(181,69,27,0.1)';
+  ctx.fillRect(lpad, H-pad-(0-(-0.4))/(1.5)*(H-2*pad), rpad-lpad, pad);
+  ctx.fillRect(lpad, pad, rpad-lpad, y1-pad);
+  ctx.fillStyle='#b5451b'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('⚠ p > 1', (lpad+rpad)/2, pad+12);
+  ctx.fillText('⚠ p < 0', (lpad+rpad)/2, H-pad-8);
+  // Label
+  ctx.fillStyle='#b5451b'; ctx.font='bold 10px Source Serif 4'; ctx.textAlign='center';
+  ctx.fillText('LMM (wrong for binary)', (lpad+rpad)/2, H-2);
+
+  // DIVIDER
+  ctx.strokeStyle='var(--border)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(mid,10); ctx.lineTo(mid,H-10); ctx.stroke();
+
+  // RIGHT PANEL — GLMM sigmoid
+  const lpR=mid+10, rpR=W-pad;
+  const toXR=v=>lpR+(v-(-6))/(6-(-6))*(rpR-lpR);
+  const toYR=v=>H-pad-((v-(-0.05))/(1.1)*(H-2*pad));
+  const sigmoid=x=>1/(1+Math.exp(-x));
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lpR,pad); ctx.lineTo(lpR,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lpR,H-pad); ctx.lineTo(rpR,H-pad); ctx.stroke();
+  const y0R=toYR(0), y1R=toYR(1);
+  ctx.strokeStyle='#1a6b5c'; ctx.lineWidth=1; ctx.setLineDash([3,2]);
+  ctx.beginPath(); ctx.moveTo(lpR,y0R); ctx.lineTo(rpR,y0R); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lpR,y1R); ctx.lineTo(rpR,y1R); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#1a6b5c'; ctx.font='9px JetBrains Mono'; ctx.textAlign='right';
+  ctx.fillText('p=1',lpR-2,y1R+3); ctx.fillText('p=0',lpR-2,y0R+3);
+
+  ctx.strokeStyle='#1a2744'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let x=-6;x<=6;x+=0.1){
+    const px=toXR(x), py=toYR(sigmoid(x));
+    x===-6?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#1a2744'; ctx.font='bold 10px Source Serif 4'; ctx.textAlign='center';
+  ctx.fillText('GLMM logistic (correct)', (lpR+rpR)/2, H-2);
+  ctx.fillStyle='#1a6b5c'; ctx.font='9px JetBrains Mono';
+  ctx.fillText('always stays in [0,1] ✓', (lpR+rpR)/2, pad+14);
+}
+
+// Figure: logit link illustration
+function drawLink(){
+  const s=setupC('linkCanvas',260); if(!s)return;
+  const {ctx,W,H}=s;
+  const mid=W/2, pad=45;
+  const sigmoid=x=>1/(1+Math.exp(-x));
+  const logit=p=>Math.log(p/(1-p));
+
+  // LEFT — sigmoid
+  const lL=pad, rL=mid-15;
+  const toXL=x=>lL+(x-(-5))/(5-(-5))*(rL-lL);
+  const toYL=v=>H-pad-((v-0)/(1)*(H-2*pad));
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lL,pad); ctx.lineTo(lL,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lL,H-pad); ctx.lineTo(rL,H-pad); ctx.stroke();
+  [-4,-2,0,2,4].forEach(v=>{
+    ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(v,toXL(v),H-pad+13);
+  });
+  ctx.fillStyle='#aaa'; ctx.textAlign='center'; ctx.fillText('linear predictor (Xβ+Zu)',lL+(rL-lL)/2,H-2);
+
+  ctx.strokeStyle='#1a2744'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let x=-5;x<=5;x+=0.05){
+    const px=toXL(x), py=toYL(sigmoid(x));
+    x===-5?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#1a2744'; ctx.font='bold 10px Source Serif 4'; ctx.textAlign='center';
+  ctx.fillText('sigmoid(x) = probability',lL+(rL-lL)/2,pad+16);
+
+  // Annotation
+  ctx.strokeStyle='#c8930a'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+  const p0=toXL(0), py0=toYL(0.5);
+  ctx.beginPath(); ctx.moveTo(p0,H-pad); ctx.lineTo(p0,py0); ctx.lineTo(lL,py0); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#c8930a'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('x=0 → p=0.5',lL+2,py0-4);
+
+  // DIVIDER
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(mid,10); ctx.lineTo(mid,H-10); ctx.stroke();
+
+  // RIGHT — logit
+  const lR=mid+15, rR=W-pad;
+  const toXR=p=>lR+(p-0.01)/(0.99-0.01)*(rR-lR);
+  const toYR=v=>H-pad-((v-(-5))/(10)*(H-2*pad));
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lR,pad); ctx.lineTo(lR,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lR,H-pad); ctx.lineTo(rR,H-pad); ctx.stroke();
+  [0.1,0.3,0.5,0.7,0.9].forEach(v=>{
+    ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(v,toXR(v),H-pad+13);
+  });
+  ctx.fillStyle='#aaa'; ctx.textAlign='center'; ctx.fillText('probability p',lR+(rR-lR)/2,H-2);
+
+  ctx.strokeStyle='#b5451b'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let p=0.02;p<=0.98;p+=0.01){
+    const px=toXR(p), py=toYR(logit(p));
+    p===0.02?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  ctx.fillStyle='#b5451b'; ctx.font='bold 10px Source Serif 4'; ctx.textAlign='center';
+  ctx.fillText('logit(p) = log-odds',lR+(rR-lR)/2,pad+16);
+
+  // Zero line
+  const zy=toYR(0);
+  ctx.strokeStyle='#c8930a'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+  ctx.beginPath(); ctx.moveTo(lR,zy); ctx.lineTo(rR,zy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#c8930a'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('logit(0.5) = 0',lR+2,zy-4);
+}
+
+// Figure: integral illustration
+function drawIntegral(){
+  const s=setupC('integralCanvas',260); if(!s)return;
+  const {ctx,W,H}=s;
+  const pad=45;
+  const normal=(x,mu,sig)=>Math.exp(-0.5*((x-mu)/sig)**2)/(sig*Math.sqrt(2*Math.PI));
+  const sigmoid=x=>1/(1+Math.exp(-x));
+  // p(u) = N(0,1) — random effects distribution
+  // p(y|u) = product of bernoulli-like, approximated as a bump at u=1.5
+  const pU=u=>normal(u,0,1.2);
+  const pYu=u=>sigmoid(u)*1.2; // rough p(y|u) shape
+  const product=u=>pU(u)*pYu(u)*3.5; // scaled product
+
+  const toX=u=>pad+(u-(-4))/(4-(-4))*(W-2*pad);
+  const toY=v=>H-pad-((v-0)/(0.7)*(H-2*pad));
+
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  [-3,-2,-1,0,1,2,3].forEach(v=>{
+    ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(v,toX(v),H-pad+13);
+  });
+  ctx.fillStyle='#aaa'; ctx.textAlign='center'; ctx.fillText('Random effect u',W/2,H-2);
+
+  // p(u) — orange
+  ctx.strokeStyle='#c8930a'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let u=-4;u<=4;u+=0.05){
+    const px=toX(u), py=toY(pU(u));
+    u===-4?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  // p(y|u) — blue
+  ctx.strokeStyle='#1a2744'; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  for(let u=-4;u<=4;u+=0.05){
+    const px=toX(u), py=toY(pYu(u)*0.35);
+    u===-4?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Product shaded area
+  ctx.fillStyle='rgba(91,58,138,0.15)';
+  ctx.beginPath(); ctx.moveTo(toX(-4),toY(0));
+  for(let u=-4;u<=4;u+=0.05){ ctx.lineTo(toX(u),toY(product(u))); }
+  ctx.lineTo(toX(4),toY(0)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#5b3a8a'; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let u=-4;u<=4;u+=0.05){
+    const px=toX(u), py=toY(product(u));
+    u===-4?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  // Legend
+  const lx=W-180, ly=pad+10;
+  [[('rgba(91,58,138,0.5)'),'p(y|u)·p(u) — the product'],[('#c8930a'),'p(u) = N(0,G)'],[('#1a2744'),'p(y|u) ≈ logistic']].forEach(([col,lab],i)=>{
+    ctx.fillStyle=col; ctx.fillRect(lx,ly+i*18,18,10);
+    ctx.fillStyle='#4a4a6a'; ctx.font='9px Source Serif 4'; ctx.textAlign='left';
+    ctx.fillText(lab,lx+22,ly+i*18+9);
+  });
+  ctx.fillStyle='#5b3a8a'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('∫ product du = shaded area = p(y)',W/2,pad+14);
+  ctx.fillText('No closed form → must approximate numerically',W/2,pad+26);
+}
+
+window.addEventListener('load',()=>{ drawBound(); drawLink(); drawIntegral(); });
+window.addEventListener('resize',()=>{ drawBound(); drawLink(); drawIntegral(); });
+</script>
+</body>
+</html>

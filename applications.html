@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Applications & Workflow — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.workflow-card {
+  background: white; border: 1px solid var(--border);
+  margin-bottom: 3rem; overflow: hidden;
+}
+.wf-head {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 0; border-bottom: 1px solid var(--border);
+}
+.wf-num {
+  background: var(--navy); color: white;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem; font-weight: 700;
+  padding: 1.5rem 2rem;
+  display: flex; align-items: center;
+  line-height: 1;
+}
+.wf-title-block { padding: 1.5rem 2rem; }
+.wf-scenario {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-ghost); margin-bottom: 0.4rem;
+}
+.wf-title-block h3 { margin: 0 0 0.3rem; font-size: 1.5rem; }
+.wf-subtitle { font-size: 0.9rem; color: var(--ink-faint); line-height: 1.55; }
+.wf-body { padding: 2rem; }
+
+/* Step list */
+.algo-steps { list-style: none; padding: 0; margin: 1rem 0; counter-reset: step; }
+.algo-step { counter-increment: step; display: grid; grid-template-columns: 48px 1fr; gap: 0; margin-bottom: 0; }
+.algo-step-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem; font-weight: 700;
+  color: var(--border-dark); line-height: 1;
+  padding: 0.9rem 0 0.9rem 0.5rem;
+  border-right: 2px solid var(--border);
+}
+.algo-step-content { padding: 0.7rem 0 0.7rem 1.25rem; border-bottom: 1px solid var(--border); }
+.algo-step:last-child .algo-step-content { border-bottom: none; }
+.algo-step-content strong { display: block; color: var(--navy); margin-bottom: 0.25rem; font-size: 0.95rem; }
+.algo-step-content p { margin: 0; font-size: 0.88rem; color: var(--ink-faint); line-height: 1.6; }
+.algo-step-content .decision {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+  background: var(--paper); border-left: 2px solid var(--gold);
+  padding: 0.4rem 0.75rem; margin-top: 0.5rem; color: var(--ink-faint);
+  line-height: 1.6;
+}
+
+/* Intercept vs Slope comparison */
+.model-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin: 2rem 0; }
+.mc-cell { background: white; padding: 1.5rem; }
+.mc-cell canvas { display: block; width: 100%; }
+.mc-head { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-ghost); margin-bottom: 0.5rem; }
+.mc-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; }
+.mc-eq { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; background: var(--paper); padding: 0.4rem 0.75rem; margin: 0.5rem 0; color: var(--navy); }
+.mc-desc { font-size: 0.85rem; color: var(--ink-faint); line-height: 1.6; }
+
+/* Advantages grid */
+.adv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin: 2rem 0; }
+.adv-cell { background: white; padding: 1.5rem; }
+.adv-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+.adv-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; }
+.adv-desc { font-size: 0.85rem; color: var(--ink-faint); line-height: 1.6; }
+
+@media(max-width:700px){
+  .model-compare { grid-template-columns: 1fr; }
+  .adv-grid { grid-template-columns: 1fr; }
+  .wf-head { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+  <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html" class="active">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="intercepts · slopes · workflows">
+    <div class="hero-eyebrow">Applications · Logical Workflows</div>
+    <h1 class="hero-title">From Data to<br><em>Model Decision</em></h1>
+    <p class="hero-subtitle">
+      Four common scenarios, each with the scientist's decision algorithm — the logical steps a researcher takes from "I have this data" to "I fit this model and interpret it this way." No code. Just thinking.
+    </p>
+  </div>
+
+  <div class="content-wide">
+
+    <!-- RANDOM INTERCEPTS VS SLOPES FIRST — conceptual foundation -->
+    <div class="section-marker"><div class="sm-num">★</div><div class="sm-line"></div><div class="sm-label">Core Concept First</div></div>
+
+    <h2>Random Intercepts vs. Random Slopes — <em>what's the difference?</em></h2>
+    <p>Before the workflows, you need to intuitively understand the two main types of random effects, because choosing between them is the central modelling decision.</p>
+
+    <div class="model-compare">
+      <div class="mc-cell">
+        <div class="mc-head">// Model A</div>
+        <div class="mc-title">Random Intercepts Only</div>
+        <div class="mc-eq">(1 | patient)</div>
+        <canvas id="riCanvas" height="220"></canvas>
+        <div class="mc-desc" style="margin-top:0.75rem;">
+          <strong>What it assumes:</strong> Every patient responds to the predictor (e.g. PHQ-8) by the same amount — the slope β₁ is identical for everyone. But each patient has their own baseline level (their intercept differs).<br><br>
+          <strong>The lines are parallel.</strong> They start at different heights but climb at the same rate. The gap between patients stays constant across all PHQ-8 values.<br><br>
+          <strong>Use when:</strong> You have reason to believe the effect is consistent across individuals. Most starting models begin here — it's simpler and requires fewer parameters.
+        </div>
+      </div>
+      <div class="mc-cell">
+        <div class="mc-head">// Model B</div>
+        <div class="mc-title">Random Intercepts + Random Slopes</div>
+        <div class="mc-eq">(1 + phq8 | patient)</div>
+        <canvas id="rsCanvas" height="220"></canvas>
+        <div class="mc-desc" style="margin-top:0.75rem;">
+          <strong>What it assumes:</strong> Each patient has their own baseline (intercept) AND their own rate of change with the predictor (slope). Some patients show a steep vocal response to depression; others barely change.<br><br>
+          <strong>The lines fan out or cross.</strong> The gap between patients changes depending on the PHQ-8 value — they're not parallel.<br><br>
+          <strong>Use when:</strong> Theory or exploratory plots suggest individual responses vary. It's richer but needs more data per person (rough guide: ≥5–10 observations per subject to estimate a random slope reliably).
+        </div>
+      </div>
+    </div>
+
+    <div class="callout gold">
+      <div class="callout-label">The Practical Decision Rule</div>
+      <p>Start with random intercepts only. Check: do the residuals still show a pattern per subject (some always positive, some always negative)? If yes, random slopes may help. Also check: does adding random slopes significantly improve model fit (compare with likelihood ratio test using ML)? If you have &lt;5 observations per subject, random slopes will likely fail to converge.</p>
+    </div>
+
+    <!-- ════════════════════════════════════
+         WORKFLOW 1: LONGITUDINAL
+    ═════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">1</div><div class="sm-line"></div><div class="sm-label">Longitudinal Data</div></div>
+
+    <div class="workflow-card">
+      <div class="wf-head">
+        <div class="wf-num">01</div>
+        <div class="wf-title-block">
+          <div class="wf-scenario">Scenario: Longitudinal Study</div>
+          <h3>Tracking depression over time</h3>
+          <p class="wf-subtitle">100 patients with MDD. PHQ-8 measured every 2 weeks for a year. Goal: does acoustic feature X change as depression severity changes?</p>
+        </div>
+      </div>
+      <div class="wf-body">
+        <ul class="algo-steps">
+          <li class="algo-step">
+            <div class="algo-step-num">1</div>
+            <div class="algo-step-content">
+              <strong>Explore the data visually</strong>
+              <p>Plot each patient's trajectory (outcome vs time, coloured by patient). Look for: (a) do patients differ in their starting levels? → suggests random intercepts. (b) do the slopes differ? → suggests random slopes. (c) is there a general trend across everyone? → suggests a fixed time effect.</p>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">2</div>
+            <div class="algo-step-content">
+              <strong>Compute the ICC before modelling</strong>
+              <p>Fit a null model (random intercept, no predictors) to get baseline ICC. If ICC &lt; 0.05, the data is barely clustered — a simple approach may suffice. If ICC &gt; 0.1, random effects are clearly needed.</p>
+              <div class="decision">Null model: <code>outcome ~ 1 + (1|patient)</code> → ICC = σ²_patient / (σ²_patient + σ²_residual)</div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">3</div>
+            <div class="algo-step-content">
+              <strong>Add the predictor of interest as a fixed effect</strong>
+              <p>Add PHQ-8 score as a fixed effect. This tests: "on average, across all patients, does worse depression predict higher pause_z?" Control for session number (time) as a covariate to separate the depression effect from any general trend over time.</p>
+              <div class="decision">Model: <code>outcome ~ phq8 + session + (1|patient)</code></div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">4</div>
+            <div class="algo-step-content">
+              <strong>Consider whether individual responses vary (random slopes)</strong>
+              <p>Ask: is it scientifically plausible that some patients respond more strongly to depression than others in their voice? If yes, add a random slope for PHQ-8. Compare models using likelihood ratio test (refit with ML, not REML).</p>
+              <div class="decision">Extended: <code>outcome ~ phq8 + session + (1 + phq8|patient)</code><br>LRT: does adding the random slope significantly improve fit?</div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">5</div>
+            <div class="algo-step-content">
+              <strong>Check model assumptions</strong>
+              <p>Plot residuals vs fitted values (no fan shape). Plot BLUPs (random intercepts) on a number line — should be approximately normal around zero. Check for outlying patients with unusually large BLUPs.</p>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">6</div>
+            <div class="algo-step-content">
+              <strong>Report the fixed effect with confidence intervals</strong>
+              <p>Report β_phq8 (the biomarker effect), its SE, t-value, and 95% CI. If the CI excludes zero, you have a statistically validated biomarker. Report ICC to show why random effects were necessary.</p>
+              <div class="decision">Report: β₁ = X.XX (SE = X.XX), t = X.XX, 95% CI [X.XX, X.XX]; ICC = 0.XX</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+         WORKFLOW 2: HIERARCHICAL
+    ═════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">2</div><div class="sm-line"></div><div class="sm-label">Hierarchical / Nested</div></div>
+
+    <div class="workflow-card">
+      <div class="wf-head">
+        <div class="wf-num">02</div>
+        <div class="wf-title-block">
+          <div class="wf-scenario">Scenario: Students within Schools</div>
+          <h3>Does a teaching intervention work?</h3>
+          <p class="wf-subtitle">2,000 students across 40 schools. Half the schools get a new curriculum. Goal: does the intervention improve test scores?</p>
+        </div>
+      </div>
+      <div class="wf-body">
+        <ul class="algo-steps">
+          <li class="algo-step">
+            <div class="algo-step-num">1</div>
+            <div class="algo-step-content">
+              <strong>Identify the levels and the unit of randomisation</strong>
+              <p>Levels: students (level 1) nested in schools (level 2). The intervention was randomised at the <em>school</em> level — entire schools got the curriculum or didn't. This is important: individual student assignment isn't independent, so treating them as independent would be wrong.</p>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">2</div>
+            <div class="algo-step-content">
+              <strong>Fit the null model and compute the school-level ICC</strong>
+              <p>ICC here tells you what fraction of test score variability is due to which school a student attends. High ICC means school-level factors matter a lot — you'll need school-level random effects. Low ICC means schools are interchangeable.</p>
+              <div class="decision">Null: <code>score ~ 1 + (1|school)</code> → ICC = σ²_school / (σ²_school + σ²_student)</div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">3</div>
+            <div class="algo-step-content">
+              <strong>Add the treatment as a level-2 (school-level) fixed effect</strong>
+              <p>The intervention varies between schools, not between students within schools. It is a level-2 predictor. Adding it tests: do schools that received the curriculum have higher average scores?</p>
+              <div class="decision">Model: <code>score ~ intervention + student_age + (1|school)</code></div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">4</div>
+            <div class="algo-step-content">
+              <strong>Consider cross-level interactions</strong>
+              <p>Does the intervention work better for older students than younger ones? This is a cross-level interaction: a student-level variable (age) moderating a school-level effect (intervention). Theoretically interesting, but requires large samples to detect.</p>
+              <div class="decision">Interaction: <code>score ~ intervention * student_age + (1|school)</code></div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">5</div>
+            <div class="algo-step-content">
+              <strong>Report variance at each level</strong>
+              <p>Report σ²_school and σ²_student separately, as well as ICC. This shows how much of the unexplained variance is between schools (contextual) vs within schools (individual). The fixed effect of intervention (with its correct SE) is your main finding.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+         WORKFLOW 3: CLUSTERED CROSS-SECTIONAL
+    ═════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">3</div><div class="sm-line"></div><div class="sm-label">Clustered Cross-Sectional</div></div>
+
+    <div class="workflow-card">
+      <div class="wf-head">
+        <div class="wf-num">03</div>
+        <div class="wf-title-block">
+          <div class="wf-scenario">Scenario: Patients within Hospitals</div>
+          <h3>Does a drug reduce readmission rates?</h3>
+          <p class="wf-subtitle">5,000 patients across 30 hospitals. Each patient seen once. Goal: does Drug A reduce 30-day readmission?</p>
+        </div>
+      </div>
+      <div class="wf-body">
+        <ul class="algo-steps">
+          <li class="algo-step">
+            <div class="algo-step-num">1</div>
+            <div class="algo-step-content">
+              <strong>Recognise the clustering: patients within hospitals</strong>
+              <p>Patients in the same hospital share doctors, protocols, equipment, and patient mix. Their readmission rates are correlated within hospitals — not because of the drug, but because of hospital quality. Ignoring this would inflate your effective sample size.</p>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">2</div>
+            <div class="algo-step-content">
+              <strong>Check whether outcome is normal or binary</strong>
+              <p>Readmission is binary (yes/no). A standard LMM assumes a normal outcome. For binary outcomes, you need a <strong>Generalised Linear Mixed Model (GLMM)</strong> with a logistic link function. See the GLMM page for details.</p>
+              <div class="decision">Binary outcome → GLMM with logit link: <code>glmer(readmit ~ drug + age + (1|hospital), family=binomial)</code></div>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">3</div>
+            <div class="algo-step-content">
+              <strong>Add patient-level and hospital-level controls</strong>
+              <p>Patient-level: age, comorbidities, severity score. Hospital-level: size, urban/rural, teaching status. Adding both controls for the confounders at each level, isolating the treatment effect.</p>
+            </div>
+          </li>
+          <li class="algo-step">
+            <div class="algo-step-num">4</div>
+            <div class="algo-step-content">
+              <strong>Report odds ratios with cluster-robust CIs</strong>
+              <p>For logistic GLMM, interpret the exponentiated coefficient as an odds ratio: "Drug A is associated with X times the odds of readmission compared to no drug, controlling for patient characteristics and hospital." Report hospital-level ICC to justify the random effects.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ADVANTAGES -->
+    <div class="section-marker"><div class="sm-num">✓</div><div class="sm-line"></div><div class="sm-label">Why LMMs Beat the Alternatives</div></div>
+
+    <h2>Advantages of LMMs</h2>
+
+    <div class="adv-grid">
+      <div class="adv-cell">
+        <div class="adv-icon">🎯</div>
+        <div class="adv-title">Handles Dependency</div>
+        <div class="adv-desc">Explicitly models the correlation within groups via random effects. Standard errors on fixed effects are correct — not inflated by treating correlated observations as independent. The t-values and p-values you get are ones you can actually trust.</div>
+      </div>
+      <div class="adv-cell">
+        <div class="adv-icon">🕳️</div>
+        <div class="adv-title">Missing Data</div>
+        <div class="adv-desc">REML estimation uses all available data for each subject. A patient who only contributes 4 of 26 sessions is not dropped — they still contribute to estimating the fixed effects and their own BLUP. Repeated-measures ANOVA requires complete data; LMM does not.</div>
+      </div>
+      <div class="adv-cell">
+        <div class="adv-icon">📉</div>
+        <div class="adv-title">Reduced Bias (False Positives)</div>
+        <div class="adv-desc">By correctly partitioning variance into between-group and within-group components, LMMs prevent the inflated t-statistics that come from ignoring clustering. The improvement can be dramatic — a "significant" OLS result can become non-significant once clustering is accounted for.</div>
+      </div>
+      <div class="adv-cell">
+        <div class="adv-icon">🔍</div>
+        <div class="adv-title">Separates Within vs Between Effects</div>
+        <div class="adv-desc">Fixed effects capture population-average relationships. BLUPs capture individual deviations. This separation allows you to ask both "does PHQ-8 predict pause length in general?" and "which patients deviate most from the average pattern?" — simultaneously.</div>
+      </div>
+      <div class="adv-cell">
+        <div class="adv-icon">📊</div>
+        <div class="adv-title">Unbalanced Designs</div>
+        <div class="adv-desc">Groups don't need equal sizes. Some patients can have 26 sessions; others 8. Some schools can have 20 students; others 50. LMMs weight each group's contribution according to how much data it provides — more data = more influence on estimates.</div>
+      </div>
+      <div class="adv-cell">
+        <div class="adv-icon">🧩</div>
+        <div class="adv-title">Interpretable Components</div>
+        <div class="adv-desc">Unlike a black-box machine learning model, LMM output is human-readable: β₁ = 0.107 means a 1-unit increase in PHQ-8 is associated with 0.107 SD increase in pause length. The ICC = 0.96 means 96% of variance is between-patient. Every number has a precise meaning.</div>
+      </div>
+    </div>
+
+    <div class="callout navy" style="margin-top:2rem;">
+      <div class="callout-label">When LMMs Are Not Enough</div>
+      <p>LMMs assume the outcome Y is approximately normally distributed (conditional on the random effects). For binary outcomes (yes/no), count data (number of events), or ordinal data (scale ratings), you need <strong>Generalised Linear Mixed Models</strong> — the topic of the next page.</p>
+      <p style="margin-bottom:0;"><a href="glmm.html" style="color:var(--gold);">Go to GLMM →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · Applications & Workflows</p></footer>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+const PAT = ['#5b3a8a','#1a6b5c','#b5451b','#1a2744'];
+
+function setupC(id, h) {
+  const c = document.getElementById(id); if(!c) return null;
+  const W = c.parentElement.clientWidth - 48;
+  c.width=W*DPR; c.height=h*DPR; c.style.width=W+'px'; c.style.height=h+'px';
+  const ctx=c.getContext('2d'); ctx.scale(DPR,DPR);
+  ctx.fillStyle='white'; ctx.fillRect(0,0,W,h);
+  return {ctx,W,H:h};
+}
+
+function drawRI() {
+  const s=setupC('riCanvas',220); if(!s) return;
+  const {ctx,W,H}=s;
+  const pad=35, slope=0.09;
+  const intercepts=[-0.4, 0.1, 0.7, -0.8];
+  const toX=v=>pad+(v-4)/(22-4)*(W-1.5*pad);
+  const toY=v=>H-pad-((v-(-1.5))/(2.5)*(H-2*pad));
+
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad/2,H-pad); ctx.stroke();
+  ctx.fillStyle='#aaa'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+  [6,10,14,18].forEach(v=>ctx.fillText(v,toX(v),H-pad+14));
+  ctx.fillText('PHQ-8',W/2,H-4);
+
+  intercepts.forEach((b0,i)=>{
+    const a=b0+(-0.862);
+    ctx.strokeStyle=PAT[i]; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(toX(4),toY(a+slope*4)); ctx.lineTo(toX(22),toY(a+slope*22)); ctx.stroke();
+  });
+  ctx.fillStyle='#9090aa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('← same slope, different intercepts', pad+4, pad+14);
+  ctx.fillText('lines are PARALLEL', pad+4, pad+26);
+}
+
+function drawRS() {
+  const s=setupC('rsCanvas',220); if(!s) return;
+  const {ctx,W,H}=s;
+  const pad=35;
+  const params=[
+    {b0:-0.4, b1:0.14},
+    {b0: 0.3, b1:0.06},
+    {b0: 0.9, b1:0.03},
+    {b0:-0.9, b1:0.18},
+  ];
+  const toX=v=>pad+(v-4)/(22-4)*(W-1.5*pad);
+  const toY=v=>H-pad-((v-(-1.5))/(3.5)*(H-2*pad));
+
+  ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad/2,H-pad); ctx.stroke();
+  ctx.fillStyle='#aaa'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+  [6,10,14,18].forEach(v=>ctx.fillText(v,toX(v),H-pad+14));
+  ctx.fillText('PHQ-8',W/2,H-4);
+
+  params.forEach((p,i)=>{
+    ctx.strokeStyle=PAT[i]; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(toX(4),toY(p.b0+p.b1*4)); ctx.lineTo(toX(22),toY(p.b0+p.b1*22)); ctx.stroke();
+  });
+  ctx.fillStyle='#9090aa'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('← different slopes & intercepts', pad+4, pad+14);
+  ctx.fillText('lines FAN / CROSS', pad+4, pad+26);
+}
+
+window.addEventListener('load',()=>{ drawRI(); drawRS(); });
+window.addEventListener('resize',()=>{ drawRI(); drawRS(); });
+</script>
+</body>
+</html>

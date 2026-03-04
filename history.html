@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History of LMMs — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .reml-demo { background: white; border: 1px solid var(--border); padding: 2rem; margin: 2rem 0; }
+  .reml-stages { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; }
+  .stage-box { background: var(--paper); padding: 1.25rem; border-top: 3px solid var(--border-dark); }
+  .stage-box.active-stage { border-top-color: var(--teal); }
+  .stage-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-ghost); margin-bottom: 0.5rem; }
+  .stage-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+  .stage-body { font-size: 0.88rem; line-height: 1.65; color: var(--ink-faint); }
+  .math-inline { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: var(--navy); background: var(--paper-dark); padding: 0.1em 0.35em; }
+  .vs-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+  .vs-table th { background: var(--navy); color: white; padding: 0.6rem 1rem; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .vs-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); color: var(--ink-faint); }
+  .vs-table tr:hover td { background: var(--paper-dark); }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+    <div class="nav-links">
+    <a href="history.html" class="active">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="Galton → Fisher → Laird">
+    <div class="hero-eyebrow">Chapter 01 · History</div>
+    <h1 class="hero-title">140 Years to<br><em>One Equation</em></h1>
+    <p class="hero-subtitle">LMMs didn't appear from nowhere. They are the answer to a series of increasingly awkward questions that statisticians kept stumbling into. Understanding the history tells you <strong>exactly</strong> what problem each piece of the machinery solves.</p>
+  </div>
+
+  <div class="content-area">
+
+    <div class="callout gold">
+      <div class="callout-label">Reading Strategy</div>
+      <p>Each entry in this timeline ends with a <em>"what was still broken"</em> note. That broken thing is exactly what the next entry fixes. By the end, you'll see why the LMM equation has every term it has — and nothing more.</p>
+    </div>
+
+    <div class="timeline">
+
+      <!-- GALTON -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">1886</div>
+        <div class="tl-head">Galton discovers "regression to the mean" — and accidentally invents regression</div>
+        <div class="tl-body">
+          <p>Francis Galton was studying heredity — specifically, whether tall parents produce tall children. He noticed something counterintuitive: the children of very tall parents were tall, yes, but on average <em>less</em> tall than their parents. Children of very short parents were short, but less short. Everything regressed toward the average. He called this "regression toward mediocrity."</p>
+          <p>To describe this mathematically, Galton drew a line through his scatter plot. This was the first regression line. His student Karl Pearson later formalised it. The idea: you have some input X (parent height), some output Y (child height), and you fit a line: <span class="math-inline">Y = a + bX</span>.</p>
+          <div class="tl-key">The seed planted: data has systematic structure (the line) plus noise around it. The line is the signal; the scatter around it is what you can't explain.</div>
+          <p style="margin-top:0.8rem;"><strong>What was still broken:</strong> The method assumed all observations were independent. Galton's children were independent (different people). But what if your data had <em>groups</em> — multiple measurements on the same person, or students within classrooms?</p>
+        </div>
+      </div>
+
+      <!-- FISHER -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">1919–1925</div>
+        <div class="tl-head">Fisher invents ANOVA — and the concept of variance partitioning</div>
+        <div class="tl-body">
+          <p>R.A. Fisher was working at Rothamsted agricultural station, analysing crop experiments. He had a key insight: the total variability in your data can be <em>chopped up</em> (partitioned) into pieces, each attributed to a different source. Rainfall variation, fertiliser variation, plot-to-plot variation. He called this Analysis of Variance — ANOVA.</p>
+          <p>ANOVA introduced the F-test, allowing you to ask: "Is the variance between groups (e.g., different fertiliser treatments) bigger than the variance within groups (random noise within each treatment plot)?" If yes, the treatment has a real effect.</p>
+          <div class="tl-key">The crucial new idea: variance itself is informative, not just means. And variance can be split into components — between-group and within-group. This concept lives at the heart of every LMM today.</div>
+          <p><strong>What was still broken:</strong> ANOVA required balanced designs (equal group sizes) and couldn't handle continuous predictors alongside categorical ones. It also had no mechanism for "random" groups — in agricultural experiments, Fisher treated each field as a fixed, known treatment level. But what if you're sampling random doctors from a population of doctors, and you want to generalise beyond those specific doctors?</p>
+        </div>
+      </div>
+
+      <!-- HENDERSON -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">1950</div>
+        <div class="tl-head">Henderson introduces "random effects" in animal breeding</div>
+        <div class="tl-body">
+          <p>C.R. Henderson was a statistician for the dairy industry with a concrete problem: given milk yield data from many cows across many farms, how do you estimate the genetic value of a bull who has fathered cows across different farms?</p>
+          <p>The farm matters — a good farm produces more milk regardless of genetics. But farms weren't the thing of interest; they were just noise to be controlled. Henderson had the key conceptual breakthrough: treat farms as having a <em>random</em> effect, not a fixed one.</p>
+          <p><strong>Fixed effect</strong> means: these are the specific levels we care about, and we estimate a coefficient for each. If you have 5 fertiliser treatments, you get 5 coefficients and you care about each one individually.<br><br>
+          <strong>Random effect</strong> means: these are a random sample from a larger population of groups. We don't care about any specific farm's value — we just want to account for farm-to-farm variability so our estimate of the bull's genetic value is clean. We model the farm effects as being drawn from a normal distribution with some variance.</p>
+          <div class="tl-key">This is the "mixed" in mixed model — mixing fixed effects (things you specifically care about) with random effects (group structure you need to control for). A model with only fixed effects is just regression. A model with only random effects is just a variance components model. LMM has both.</div>
+          <p><strong>What was still broken:</strong> Henderson's estimation method had bias issues. The variance components (how much variability is due to farms? how much due to genetics?) were estimated with systematic error. This would take another 25 years to fix.</p>
+        </div>
+      </div>
+
+      <!-- LAIRD & WARE -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">1982</div>
+        <div class="tl-head">Laird & Ware unify everything into the modern LMM framework</div>
+        <div class="tl-body">
+          <p>Nan Laird and James Ware published "Random-Effects Models for Longitudinal Data" — the paper that defined the modern LMM. They brought together regression, variance partitioning, and random effects into one coherent framework, and crucially, gave it an estimation method that actually worked for longitudinal data (repeated measurements over time).</p>
+          <p>Their formulation: <span class="math-inline">Y = Xβ + Zu + ε</span> — with precise statistical definitions for what each piece is and how to estimate it. This is the equation you're learning. Every software package implementing LMMs (R's <code>lme4</code>, Python's <code>statsmodels</code>, SAS PROC MIXED) is implementing the Laird-Ware framework.</p>
+          <div class="tl-key">Why 1982 specifically? By then, computers were powerful enough to fit these models numerically. Before that, the mathematics existed but was too computationally expensive to use in practice.</div>
+          <p><strong>What was still broken:</strong> The estimation of variance components (σ² for random effects, σ² for residuals) was biased using standard maximum likelihood. ML underestimates variance because it doesn't account for the degrees of freedom consumed by estimating the fixed effects β first. Enter REML.</p>
+        </div>
+      </div>
+
+      <!-- REML -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">1971 → widely adopted 1980s</div>
+        <div class="tl-head">REML — the fix for biased variance estimation</div>
+        <div class="tl-body">
+          <p>Patterson and Thompson developed Restricted Maximum Likelihood (REML) for the specific problem of estimating variance components without bias. Understanding <em>why</em> it works requires understanding what ML gets wrong first.</p>
+
+          <!-- DEGREES OF FREEDOM DEEP DIVE -->
+          <div class="reml-demo">
+            <div class="canvas-title">// Degrees of Freedom — What They Actually Are</div>
+
+            <p style="font-size:0.93rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1rem;">
+              The phrase "degrees of freedom" gets used constantly in statistics and almost never explained intuitively. Here is the real idea.
+            </p>
+
+            <p style="font-size:0.93rem; color:var(--ink-faint); line-height:1.7; margin-bottom:1rem;">
+              <strong style="color:var(--navy);">A degree of freedom is one independent piece of information in your data that is free to vary.</strong>
+              When you use some of your data to estimate a parameter, you "spend" degrees of freedom — and the data becomes constrained. Constrained data contains less independent information than you think.
+            </p>
+
+            <div style="background:white; border:1px solid var(--border); padding:1.75rem; margin:1.25rem 0;">
+              <div class="canvas-title">// The Concrete Example: n=4 numbers, mean=5</div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); margin-bottom:1rem;">Say you have 4 numbers whose mean is 5. You are told the first three: <strong>3, 7, 4</strong>. What must the fourth number be?</p>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; background:var(--paper); padding:1.25rem 1.5rem; line-height:2.2; margin-bottom:1rem;">
+                3 + 7 + 4 + x = 4 × 5 = 20<br>
+                x = 20 − 14 = <strong style="color:var(--rust);">6</strong> &nbsp;← <span style="color:var(--rust);">not free. forced.</span>
+              </div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.65;">
+                The fourth value had <strong>no freedom</strong> — once you knew the mean and the other three values, it was determined. You had 4 numbers, but only <strong>3 independent pieces of information</strong>. The constraint "mean = 5" ate one degree of freedom.
+              </p>
+            </div>
+
+            <canvas id="dfCanvas" width="700" height="220" style="width:100%; border:1px solid var(--border); display:block; background:white; margin:1rem 0;"></canvas>
+            <p style="font-size:0.78rem; color:var(--ink-ghost); font-style:italic; margin-bottom:1.25rem;">Figure: Four data points on a number line. The mean (▼) is fixed at 5. The first three points (blue) are free to be anywhere. Once they are placed, the fourth (red) is locked — it has no freedom. The mean constraint is like a see-saw: both sides must balance.</p>
+
+            <div style="background:white; border:1px solid var(--border); padding:1.75rem; margin:1.25rem 0;">
+              <div class="canvas-title">// Why This Makes the Variance Formula Use n−1</div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7; margin-bottom:0.75rem;">
+                Sample variance = Σ(xᵢ − x̄)² / <strong>?</strong>
+              </p>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7; margin-bottom:0.75rem;">
+                You might think: divide by n, because there are n squared deviations. But you calculated x̄ <em>from the same data</em>. By doing so, you forced a constraint: the deviations (xᵢ − x̄) must sum to exactly zero. Always. No exceptions.
+              </p>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:0.82rem; background:var(--paper); padding:1rem 1.5rem; line-height:2; margin-bottom:0.75rem;">
+                (3−5) + (7−5) + (4−5) + (6−5) = −2 + 2 + (−1) + 1 = 0 ✓<br>
+                <span style="color:var(--ink-ghost);">This is not a coincidence. It is always true when x̄ is the sample mean.</span>
+              </div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7;">
+                Because the deviations must sum to zero, the last deviation is determined by all the others. You have n deviations but only n−1 are independent. Dividing by n treats all n as independent — it <em>underestimates</em> the true variance. Dividing by n−1 corrects for the one degree of freedom spent on estimating x̄. This is called <strong>Bessel's correction</strong>.
+              </p>
+            </div>
+
+            <div style="background:white; border:1px solid var(--border); padding:1.75rem; margin:1.25rem 0;">
+              <div class="canvas-title">// Generalising: p Parameters = p Degrees of Freedom Spent</div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7; margin-bottom:0.75rem;">
+                In OLS regression with p predictors (including intercept), you estimate p coefficients from n data points. Each coefficient you estimate uses up one degree of freedom — it imposes one linear constraint on the residuals.
+              </p>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:0.82rem; background:var(--paper); padding:1rem 1.5rem; line-height:2; margin-bottom:0.75rem;">
+                OLS residual variance = Σεᵢ² / (n − p)<br>
+                <span style="color:var(--ink-ghost);">n observations, minus p parameters estimated, leaves n−p free residuals</span>
+              </div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7;">
+                For an LMM with p fixed-effect parameters, Maximum Likelihood ignores this and divides by n — as if all n residuals are free. This is wrong: the p fixed-effect estimates constrain the residuals, just like x̄ constrained the deviations. <strong>REML accounts for this</strong> by working in a transformed space where the fixed effects have been projected out — leaving n−p truly free observations for variance estimation.
+              </p>
+            </div>
+
+            <div style="background:rgba(26,107,92,0.07); border:1px solid rgba(26,107,92,0.25); padding:1.25rem 1.5rem; margin-top:1rem;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--teal); margin-bottom:0.5rem;">The Punchline for REML</div>
+              <p style="font-size:0.88rem; color:var(--ink-faint); margin:0; line-height:1.65;">ML estimates β and σ² simultaneously — it does not account for the degrees of freedom spent on β when estimating σ². REML first projects out β (mathematically removes its influence), then estimates σ² from the remaining n−p degrees of freedom. This gives unbiased variance component estimates — crucial for correct ICC values, correct standard errors on fixed effects, and valid inference.</p>
+            </div>
+
+            <div class="reml-stages" style="margin-top:1.5rem;">
+              <div class="stage-box">
+                <div class="stage-num">ML (biased)</div>
+                <div class="stage-title">Estimate everything at once</div>
+                <div class="stage-body">Maximises the full data likelihood jointly over β and σ². Treats all n observations as free for variance estimation. With p=5 fixed parameters and n=100, acts as if df=100. Actually df=95. Underestimates σ² by factor of 95/100 — small but meaningful, especially with many fixed effects.</div>
+              </div>
+              <div class="stage-box active-stage">
+                <div class="stage-num">REML (unbiased) ✓</div>
+                <div class="stage-title">Project out fixed effects first</div>
+                <div class="stage-body">Maximises a <em>restricted</em> likelihood in the n−p dimensional space orthogonal to β. Concretely: transforms data into n−p error contrasts containing no β information. Estimates σ² from these contrasts using the correct df=n−p. Result: unbiased variance, correct standard errors, valid p-values.</div>
+              </div>
+            </div>
+          </div>
+
+          <table class="vs-table">
+            <thead><tr><th>Situation</th><th>Use ML</th><th>Use REML</th></tr></thead>
+            <tbody>
+              <tr><td>Comparing models with different <strong>fixed effects</strong> (likelihood ratio test)</td><td>✓ Required</td><td>✗ Invalid — REML likelihoods not comparable across different X</td></tr>
+              <tr><td>Comparing models with different <strong>random effects</strong> structures</td><td>✗ Biased</td><td>✓ Correct</td></tr>
+              <tr><td>Reporting final variance components (ICC, σ²_between)</td><td>✗ Underestimates</td><td>✓ Unbiased</td></tr>
+              <tr><td>Reporting fixed effect estimates (β coefficients)</td><td>Same</td><td>Same (identical β estimates)</td></tr>
+            </tbody>
+          </table>
+
+          <div class="callout teal">
+            <div class="callout-label">The Practical Rule You'll Actually Use</div>
+            <p>When you fit a model in R: <code>lmer(y ~ x + (1|patient), data=d, REML=TRUE)</code> is the default for reporting. If you need to compare whether adding PHQ-8 as a predictor improves the model, refit with <code>REML=FALSE</code> first, then use <code>anova(model1, model2)</code>. The <code>lmerTest</code> package handles p-values for you using Satterthwaite-corrected degrees of freedom.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- lme4 -->
+      <div class="tl-entry">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2005 → present</div>
+        <div class="tl-head">Douglas Bates writes lme4 — LMMs become accessible</div>
+        <div class="tl-body">
+          <p>Before <code>lme4</code>, fitting LMMs required either SAS (expensive, syntactically painful) or writing your own Newton-Raphson optimiser. Bates and colleagues built an R package that could fit LMMs in seconds using sparse matrix algebra and modern REML algorithms. Suddenly, longitudinal data analysis with random effects was something any researcher could do.</p>
+          <p>The formula syntax <code>y ~ x + (1|group)</code> — read as "y predicted by x, with a random intercept per group" — became the standard way to specify mixed models. Variants like <code>(1 + time|patient)</code> add random slopes.</p>
+          <div class="tl-key">The journey: Galton's scatter plot (1886) → Fisher's variance partitioning (1925) → Henderson's random effects (1950) → Laird-Ware framework (1982) → REML (widely adopted 1980s) → lme4 (2005) → your RADAR-CNS analysis (now).</div>
+        </div>
+      </div>
+
+    </div><!-- /timeline -->
+
+    <div class="callout navy" style="margin-top:3rem;">
+      <div class="callout-label">Next: The Problem</div>
+      <p>Now that you know <em>why</em> these tools were built — in what specific situations do your data violate the independence assumption that forces you to use them? <a href="problem.html" style="color:var(--gold);">Chapter 02 →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · History · Chapter 01 of 04</p></footer>
+
+<script>
+function toggleAcc(h) {
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+
+// Draw degrees of freedom illustration
+window.addEventListener('load', function() {
+  const c = document.getElementById('dfCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const DPR = window.devicePixelRatio || 1;
+  c.width = W * DPR; c.height = H * DPR;
+  c.style.width = W + 'px'; c.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  const pts = [3, 7, 4, 6];
+  const mean = 5;
+  const colors = ['#1a2744','#1a2744','#1a2744','#b5451b'];
+  const labels = ['free','free','free','FORCED'];
+
+  const xMin = 0, xMax = 10;
+  const toX = v => 60 + (v - xMin) / (xMax - xMin) * (W - 120);
+  const axY = 110;
+
+  // Background
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, W, H);
+
+  // Axis line
+  ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(50, axY); ctx.lineTo(W - 50, axY); ctx.stroke();
+
+  // Tick marks & numbers
+  ctx.fillStyle = '#aaa';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  for (let i = 1; i <= 9; i++) {
+    const x = toX(i);
+    ctx.beginPath(); ctx.moveTo(x, axY - 4); ctx.lineTo(x, axY + 4); ctx.stroke();
+    ctx.fillText(i, x, axY + 16);
+  }
+
+  // Mean marker (triangle above)
+  const mx = toX(mean);
+  ctx.fillStyle = '#c8930a';
+  ctx.beginPath(); ctx.moveTo(mx, axY - 22); ctx.lineTo(mx - 8, axY - 38); ctx.lineTo(mx + 8, axY - 38); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#c8930a';
+  ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.fillText('mean = 5', mx, axY - 42);
+
+  // Dashed drop line from mean to axis
+  ctx.strokeStyle = '#c8930a'; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(mx, axY - 22); ctx.lineTo(mx, axY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Data points
+  pts.forEach((v, i) => {
+    const x = toX(v);
+    const isForced = i === 3;
+    const yOff = axY + 30 + (i % 2 === 0 ? 0 : 22);
+
+    // Vertical line from axis to dot
+    ctx.strokeStyle = colors[i]; ctx.lineWidth = isForced ? 2 : 1;
+    ctx.setLineDash(isForced ? [] : [3,3]);
+    ctx.beginPath(); ctx.moveTo(x, axY); ctx.lineTo(x, axY + 15); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dot
+    ctx.fillStyle = isForced ? '#b5451b' : '#1a2744';
+    ctx.beginPath(); ctx.arc(x, axY, isForced ? 9 : 7, 0, Math.PI * 2); ctx.fill();
+
+    // Value label on dot
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${isForced ? 11 : 10}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(v, x, axY + 4);
+
+    // Free/forced label below
+    ctx.fillStyle = isForced ? '#b5451b' : '#9090aa';
+    ctx.font = `${isForced ? 'bold ' : ''}10px JetBrains Mono, monospace`;
+    ctx.fillText(labels[i], x, axY + 35 + (i < 2 ? 0 : 15));
+  });
+
+  // Balance beam annotation
+  ctx.fillStyle = '#9090aa';
+  ctx.font = '10px Source Serif 4, serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('← left of mean: 3, 4  (sum of deviations = −3)', 55, H - 28);
+  ctx.fillText('right of mean: 7, 6 →  (sum of deviations = +3)', 55, H - 12);
+});
+</script>
+</body>
+</html>

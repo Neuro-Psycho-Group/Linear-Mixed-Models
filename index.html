@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Mixed Models — A Complete Guide</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .landing-hero {
+    min-height: calc(100vh - 52px);
+    background: var(--navy);
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+  .lh-left {
+    padding: 7rem 4rem 5rem;
+    display: flex; flex-direction: column; justify-content: center;
+    border-right: 1px solid rgba(255,255,255,0.07);
+    position: relative; overflow: hidden;
+  }
+  .lh-left::after {
+    content: 'Y=Xβ+Zu+ε';
+    position: absolute; bottom: -2rem; right: -3rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 9rem; font-weight: 700;
+    color: rgba(255,255,255,0.03);
+    pointer-events: none; white-space: nowrap;
+  }
+  .main-eq {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem; font-weight: 700;
+    color: white; letter-spacing: 0.05em;
+    margin: 1.5rem 0 0.5rem; line-height: 1;
+  }
+  .main-eq .fx { color: #c39bd3; }
+  .main-eq .rx { color: #76d7c4; }
+  .main-eq .ex { color: #f1948a; }
+  .eq-legend { display: flex; flex-direction: column; gap: 0.5rem; margin: 1.5rem 0 3rem; }
+  .eq-legend-row {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.45);
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .eq-legend-row span { display: inline-block; width: 16px; height: 2px; flex-shrink:0; }
+  .lh-right { padding: 7rem 3.5rem 5rem; display: flex; flex-direction: column; justify-content: center; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(255,255,255,0.08); }
+  .landing-card {
+    background: rgba(255,255,255,0.04);
+    padding: 1.75rem; text-decoration: none; color: inherit;
+    display: block; transition: background 0.2s;
+    border-bottom: 2px solid transparent; position: relative;
+  }
+  .landing-card:hover { background: rgba(255,255,255,0.08); border-bottom-color: var(--gold); }
+  .lc-num { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 700; color: rgba(255,255,255,0.12); line-height: 1; margin-bottom: 0.5rem; }
+  .lc-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 0.4rem; }
+  .lc-desc { font-size: 0.8rem; color: rgba(255,255,255,0.35); line-height: 1.5; font-family: 'Source Serif 4', serif; }
+  .lc-arrow { position: absolute; bottom: 1.2rem; right: 1.2rem; color: rgba(255,255,255,0.2); font-size: 1rem; transition: all 0.2s; }
+  .landing-card:hover .lc-arrow { color: var(--gold); transform: translate(2px,-2px); }
+  .lh-context { margin-top: 2rem; padding: 1.2rem 1.5rem; background: rgba(200,147,10,0.12); border-left: 3px solid var(--gold); font-size: 0.85rem; color: rgba(255,255,255,0.55); line-height: 1.6; }
+  .lh-context strong { color: rgba(255,255,255,0.8); }
+  @media (max-width:700px) { .landing-hero { grid-template-columns: 1fr; } .card-grid { grid-template-columns: 1fr; } .lh-left,.lh-right { padding: 3rem 1.5rem; } }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+    <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+<div class="page-body">
+  <div class="landing-hero">
+    <div class="lh-left">
+      <div class="hero-eyebrow">A Complete Technical Guide</div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;color:white;line-height:1.1;margin-bottom:1rem;">Linear<br><em style="color:rgba(255,255,255,0.5);">Mixed</em><br>Models</h1>
+      <div class="main-eq">Y = <span class="fx">Xβ</span> + <span class="rx">Zu</span> + <span class="ex">ε</span></div>
+      <div class="eq-legend">
+        <div class="eq-legend-row"><span style="background:#c39bd3;"></span>Xβ — fixed effects (population-level relationships)</div>
+        <div class="eq-legend-row"><span style="background:#76d7c4;"></span>Zu — random effects (per-group deviations)</div>
+        <div class="eq-legend-row"><span style="background:#f1948a;"></span>ε — residual noise</div>
+      </div>
+      <div class="lh-context">Built around the <strong>RADAR-CNS depression-from-voice pipeline</strong> — understanding every step from acoustic feature extraction to validated vocal biomarkers.</div>
+    </div>
+    <div class="lh-right">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:1.2rem;">// Eight Chapters</div>
+      <div class="card-grid">
+        <a href="history.html" class="landing-card"><div class="lc-num">01</div><div class="lc-title">Why LMMs Exist</div><div class="lc-desc">Galton, ANOVA, and the 140-year road to mixed models. What problem forced statisticians to invent this?</div><div class="lc-arrow">↗</div></a>
+        <a href="problem.html" class="landing-card"><div class="lc-num">02</div><div class="lc-title">The Independence Problem</div><div class="lc-desc">Why repeated-measures data breaks OLS. What happens if you ignore it. Interactive simulation.</div><div class="lc-arrow">↗</div></a>
+        <a href="data-types.html" class="landing-card"><div class="lc-num">03</div><div class="lc-title">Data Types</div><div class="lc-desc">Non-independent, longitudinal, clustered, hierarchical — what each actually means, with diagrams.</div><div class="lc-arrow">↗</div></a>
+        <a href="math.html" class="landing-card"><div class="lc-num">04</div><div class="lc-title">The Equation, Explained</div><div class="lc-desc">What X, β, Z, u each actually mean. Build the matrices by hand. Why REML, not ML.</div><div class="lc-arrow">↗</div></a>
+        <a href="applications.html" class="landing-card"><div class="lc-num">05</div><div class="lc-title">Applications &amp; Workflows</div><div class="lc-desc">Random intercepts vs slopes. Logical decision algorithms for four common research scenarios.</div><div class="lc-arrow">↗</div></a>
+        <a href="radar.html" class="landing-card"><div class="lc-num">06</div><div class="lc-title">RADAR-CNS in Full</div><div class="lc-desc">Every phase of the depression-from-voice pipeline — and exactly where LMMs are non-optional.</div><div class="lc-arrow">↗</div></a>
+        <a href="glmm.html" class="landing-card"><div class="lc-num">07</div><div class="lc-title">GLMM</div><div class="lc-desc">When Y isn't normal. Link functions, the integral problem, Laplace approximation — all visual.</div><div class="lc-arrow">↗</div></a>
+        <a href="paper.html" class="landing-card"><div class="lc-num">08</div><div class="lc-title">Paper Dissection</div><div class="lc-desc">Cummins et al. (2023, KCL). The largest real-world speech-depression LMM study. Every modelling decision explained.</div><div class="lc-arrow">↗</div></a>
+        <a href="example.html" class="landing-card" style="grid-column:1/-1; background:rgba(200,147,10,0.08); border-bottom:2px solid var(--gold);"><div class="lc-num">★</div><div class="lc-title">Worked Example</div><div class="lc-desc">Four patients. Real arithmetic. Every matrix built by hand. Every fitted value computed. Figures from the actual numbers.</div><div class="lc-arrow">↗</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="site-footer"><p>Linear Mixed Models · Technical Study Guide · RADAR-CNS Depression Research</p></footer>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Math — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Ruled paper for math sections */
+  .math-section { background: var(--paper); }
+
+  /* Dataset table */
+  .data-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:0.82rem; margin:1.5rem 0; }
+  .data-table th { background:var(--navy); color:white; padding:0.5rem 0.9rem; text-align:center; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; }
+  .data-table th:first-child { text-align:left; }
+  .data-table td { padding:0.5rem 0.9rem; border-bottom:1px solid var(--border); text-align:center; transition:background 0.3s; }
+  .data-table td:first-child { text-align:left; font-weight:600; }
+  .row-alice { background:rgba(91,58,138,0.08); }
+  .row-bob   { background:rgba(26,107,92,0.08); }
+  .row-cara  { background:rgba(181,69,27,0.08); }
+  .row-alice td:first-child { color:var(--fixed-col); }
+  .row-bob   td:first-child { color:var(--random-col); }
+  .row-cara  td:first-child { color:var(--rust); }
+  .row-alice.hl, .row-bob.hl, .row-cara.hl { outline:2px solid var(--gold); }
+
+  /* Matrix display */
+  .eq-build {
+    display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;
+    margin:2rem 0; font-family:'JetBrains Mono',monospace;
+    font-size:0.9rem; line-height:1;
+  }
+  .eq-part { display:flex; flex-direction:column; align-items:center; }
+  .eq-part-label {
+    font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase;
+    color:var(--ink-ghost); margin-bottom:0.4rem;
+  }
+  .eq-op { font-size:1.4rem; color:var(--ink-ghost); align-self:center; padding:0 0.2rem; }
+  .matrix-box {
+    border:2px solid var(--border-dark);
+    display:inline-block; padding:0.5rem;
+    position:relative;
+  }
+  .matrix-box::before,.matrix-box::after {
+    content:''; position:absolute;
+    top:0; bottom:0; width:6px;
+    border:2px solid var(--ink);
+  }
+  .matrix-box::before { left:-8px; border-right:none; border-radius:3px 0 0 3px; }
+  .matrix-box::after  { right:-8px; border-left:none; border-radius:0 3px 3px 0; }
+  .m-row { display:flex; gap:1rem; margin:1px 0; }
+  .m-cell {
+    min-width:2rem; text-align:center; padding:0.2rem 0.3rem;
+    border-radius:2px; transition:all 0.4s;
+  }
+  .m-cell.zero { color:var(--border-dark); }
+  .m-cell.one  { font-weight:700; }
+  .m-cell.val  { font-weight:500; }
+  .m-cell.hl-alice { background:rgba(91,58,138,0.2); color:var(--fixed-col); font-weight:700; }
+  .m-cell.hl-bob   { background:rgba(26,107,92,0.2); color:var(--random-col); font-weight:700; }
+  .m-cell.hl-cara  { background:rgba(181,69,27,0.2); color:var(--rust); font-weight:700; }
+  .m-label-col { display:flex; flex-direction:column; gap:0; align-self:center; margin-left:0.75rem; }
+  .m-label-col span {
+    font-size:0.65rem; letter-spacing:0.08em; padding:0.38rem 0;
+    line-height:1; border-radius:2px; padding-left:0.3rem;
+  }
+
+  /* Step through */
+  .step-box {
+    border:1px solid var(--border);
+    background:white; margin:1.5rem 0;
+    overflow:hidden;
+  }
+  .step-header {
+    background:var(--paper-dark); padding:1rem 1.5rem;
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--border);
+  }
+  .step-header-left { display:flex; align-items:center; gap:1rem; }
+  .step-badge { font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; background:var(--navy); color:white; padding:0.2rem 0.6rem; }
+  .step-title { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; color:var(--navy); }
+  .step-body { padding:1.5rem 2rem; }
+  .step-body p { font-size:0.92rem; }
+
+  /* Variance vis */
+  .var-vis { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0; }
+  .var-panel { background:var(--paper); border:1px solid var(--border); padding:1.25rem; }
+  .var-panel-title { font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-ghost); margin-bottom:0.75rem; }
+  .var-bar-wrap { display:flex; flex-direction:column; gap:0.4rem; }
+  .var-bar-row { display:flex; align-items:center; gap:0.5rem; font-family:'JetBrains Mono',monospace; font-size:0.72rem; }
+  .var-bar-label { width:60px; color:var(--ink-faint); flex-shrink:0; }
+  .var-bar { height:14px; border-radius:1px; transition:width 0.5s; min-width:2px; }
+  .var-bar-val { color:var(--ink-ghost); }
+
+  /* u distribution */
+  .u-canvas-wrap { background:white; border:1px solid var(--border); padding:1.5rem; margin:1.5rem 0; }
+
+  /* Highlight toggle buttons */
+  .hl-btns { display:flex; gap:0.5rem; flex-wrap:wrap; margin:1rem 0; }
+  .hl-btn { font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.05em; padding:0.4rem 0.85rem; border:1px solid; background:transparent; cursor:pointer; transition:all 0.2s; }
+  .hl-btn.alice { border-color:var(--fixed-col); color:var(--fixed-col); }
+  .hl-btn.alice.on { background:var(--fixed-col); color:white; }
+  .hl-btn.bob   { border-color:var(--random-col); color:var(--random-col); }
+  .hl-btn.bob.on { background:var(--random-col); color:white; }
+  .hl-btn.cara  { border-color:var(--rust); color:var(--rust); }
+  .hl-btn.cara.on { background:var(--rust); color:white; }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+    <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html" class="active">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="Y = Xβ + Zu + ε">
+    <div class="hero-eyebrow">Chapter 03 · The Math</div>
+    <h1 class="hero-title">Building the<br><em>Equation</em><br>from Scratch</h1>
+    <p class="hero-subtitle">We'll start with a tiny real dataset — three patients, two observations each — and build every matrix in <strong>Y = Xβ + Zu + ε</strong> by hand. By the end, Z will make complete sense.</p>
+  </div>
+
+  <div class="content-area">
+
+    <!-- THE DATASET -->
+    <div class="section-marker"><div class="sm-num">1</div><div class="sm-line"></div><div class="sm-label">The Dataset</div></div>
+
+    <h2>Start concrete: <em>three patients, six rows</em></h2>
+    <p>Abstract matrix algebra is hard to grasp in the abstract. So let's use the smallest possible real example: three patients (Alice, Bob, Cara), each measured twice, with one predictor (PHQ-8 score) and one outcome (delta-normalised pause length — written <code>pause_z</code> in the RADAR-CNS code).</p>
+
+    <div class="callout gold" style="margin:1rem 0 1.5rem;">
+      <div class="callout-label">Quick note: what pause_z is — and what the z is <em>not</em></div>
+      <p><strong>pause_z is a Z-score of pause duration, computed relative to each patient's own baseline.</strong> If Alice's average pause at her first few sessions was 0.4 s (±0.1 s SD), then a session where she pauses 0.6 s gives pause_z = (0.6 − 0.4) / 0.1 = +2.0. She is pausing 2 of her own standard deviations above her personal norm.</p>
+      <p style="margin-bottom:0;">The <strong>z in pause_z is Z-score</strong> — a standardisation term meaning "how many SDs from a reference mean." It has <em>nothing to do</em> with the <strong>Z matrix</strong> in Y = Xβ + Zu + ε. That Z is the random-effects design matrix (the membership routing table for patients). Two completely different Z's from two different traditions that happen to coexist in the same analysis. In the Cummins et al. (2023, KCL / RADAR-MDD) paper, features including pause duration were standardised to mean 0, SD 1 before LMM fitting — so the β coefficients are interpretable as "per 1 SD change in the feature."</p>
+    </div>
+
+    <p>Click the patient buttons below to see which rows in the data — and which cells in the matrices — belong to each person.</p>
+
+    <div class="hl-btns">
+      <button class="hl-btn alice" id="btn-alice" onclick="highlight('alice')">● Alice</button>
+      <button class="hl-btn bob"   id="btn-bob"   onclick="highlight('bob')">● Bob</button>
+      <button class="hl-btn cara"  id="btn-cara"  onclick="highlight('cara')">● Cara</button>
+      <button class="hl-btn" style="border-color:var(--border-dark);color:var(--ink-ghost);" onclick="clearHighlight()">Clear</button>
+    </div>
+
+    <table class="data-table" id="dataTable">
+      <thead><tr><th>Row</th><th>Patient</th><th>Week</th><th>PHQ-8</th><th>Pause_z (Y)</th></tr></thead>
+      <tbody>
+        <tr class="row-alice" data-p="alice"><td>1</td><td>Alice</td><td>2</td><td>14</td><td>0.82</td></tr>
+        <tr class="row-alice" data-p="alice"><td>2</td><td>Alice</td><td>4</td><td>16</td><td>1.05</td></tr>
+        <tr class="row-bob"   data-p="bob">  <td>3</td><td>Bob</td>  <td>2</td><td>8</td> <td>-0.31</td></tr>
+        <tr class="row-bob"   data-p="bob">  <td>4</td><td>Bob</td>  <td>4</td><td>10</td><td>-0.05</td></tr>
+        <tr class="row-cara"  data-p="cara"> <td>5</td><td>Cara</td> <td>2</td><td>18</td><td>1.44</td></tr>
+        <tr class="row-cara"  data-p="cara"> <td>6</td><td>Cara</td> <td>4</td><td>21</td><td>1.89</td></tr>
+      </tbody>
+    </table>
+
+    <p>Notice something immediately: Alice's pause values (0.82, 1.05) are both elevated. Bob's (−0.31, −0.05) are both low. Cara's (1.44, 1.89) are both high. This <em>within-patient consistency</em> is exactly the clustering we discussed — and it means the six rows are not six independent data points.</p>
+
+    <!-- STEP 1: Y -->
+    <div class="section-marker"><div class="sm-num">2</div><div class="sm-line"></div><div class="sm-label">Building Y</div></div>
+
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-header-left">
+          <span class="step-badge">Y</span>
+          <span class="step-title">The outcome vector — what we're trying to predict</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>Y is simply a column vector of all your outcome values, stacked in the same order as your data rows. Nothing surprising here — this is identical to OLS.</p>
+        <div class="eq-build" style="justify-content:center;">
+          <div class="eq-part">
+            <div class="eq-part-label">Y (6×1)</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell hl-alice val">0.82</div></div>
+              <div class="m-row"><div class="m-cell hl-alice val">1.05</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val">−0.31</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val">−0.05</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val">1.44</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val">1.89</div></div>
+            </div>
+          </div>
+          <div class="m-label-col">
+            <span style="color:var(--fixed-col);">← Alice, week 2</span>
+            <span style="color:var(--fixed-col);">← Alice, week 4</span>
+            <span style="color:var(--random-col);">← Bob,   week 2</span>
+            <span style="color:var(--random-col);">← Bob,   week 4</span>
+            <span style="color:var(--rust);">← Cara,  week 2</span>
+            <span style="color:var(--rust);">← Cara,  week 4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: X and β -->
+    <div class="section-marker"><div class="sm-num">3</div><div class="sm-line"></div><div class="sm-label">Building Xβ</div></div>
+
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-header-left">
+          <span class="step-badge" style="background:var(--fixed-col);">Xβ</span>
+          <span class="step-title">Fixed effects — the relationship that applies to everyone</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>X is your design matrix of predictors — exactly like in OLS. Column 1 is always a column of 1s (for the intercept). Column 2 is PHQ-8. β is the vector of coefficients we want to estimate.</p>
+        <p>The key point: <strong>β does not change per patient</strong>. The same β₁ (effect of PHQ-8) applies to Alice, Bob, and Cara. It's the population-level relationship. That's why it's "fixed."</p>
+
+        <div class="eq-build" style="justify-content:center; gap:1.2rem;">
+          <div class="eq-part">
+            <div class="eq-part-label">X (6×2) — design matrix</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">14</div></div>
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">16</div></div>
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">8</div></div>
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">10</div></div>
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">18</div></div>
+              <div class="m-row"><div class="m-cell one">1</div><div class="m-cell val">21</div></div>
+            </div>
+          </div>
+          <div class="eq-op">×</div>
+          <div class="eq-part">
+            <div class="eq-part-label">β (2×1) — to estimate</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell val">β₀</div></div>
+              <div class="m-row"><div class="m-cell val">β₁</div></div>
+            </div>
+          </div>
+          <div class="eq-op">=</div>
+          <div class="eq-part">
+            <div class="eq-part-label">Xβ — population prediction</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell val">β₀ + 14β₁</div></div>
+              <div class="m-row"><div class="m-cell val">β₀ + 16β₁</div></div>
+              <div class="m-row"><div class="m-cell val">β₀ + 8β₁</div></div>
+              <div class="m-row"><div class="m-cell val">β₀ + 10β₁</div></div>
+              <div class="m-row"><div class="m-cell val">β₀ + 18β₁</div></div>
+              <div class="m-row"><div class="m-cell val">β₀ + 21β₁</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout gold" style="margin-top:1.5rem;">
+          <div class="callout-label">Interpretation</div>
+          <p>If estimation gives us β₀ = −0.5 and β₁ = 0.08, then for any patient with PHQ-8 = 14, the <em>population-average</em> predicted pause is −0.5 + (0.08 × 14) = 0.62 SD above baseline. This is the signal that applies to everyone. But Alice's actual value (0.82) is higher than that prediction — because Alice personally tends to pause more. That personal offset is what the random effect captures.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Z and u — THE KEY SECTION -->
+    <div class="section-marker"><div class="sm-num">4</div><div class="sm-line"></div><div class="sm-label">The Key: Z and u</div></div>
+
+    <div class="step-box">
+      <div class="step-header">
+        <div class="step-header-left">
+          <span class="step-badge" style="background:var(--random-col);">Zu</span>
+          <span class="step-title">Random effects — per-patient offsets from the population line</span>
+        </div>
+      </div>
+      <div class="step-body">
+
+        <h3 style="margin-top:0;">The question Zu answers</h3>
+        <p>After Xβ gives us the population-average prediction, there's still leftover structure in our data. Alice's rows are consistently above the population line. Bob's are consistently below. This isn't random noise — it's systematic and it belongs to each person.</p>
+        <p>We need to add a <em>person-specific offset</em> to each row. Call these offsets u_Alice, u_Bob, u_Cara. If Alice tends to pause more than average, u_Alice will be positive. If Bob tends to pause less, u_Bob will be negative.</p>
+
+        <h3>What is u?</h3>
+        <p><strong>u is a vector of those person-specific offsets.</strong> One per patient — three patients, so u is a 3×1 vector:</p>
+
+        <div class="eq-build" style="justify-content:center;">
+          <div class="eq-part">
+            <div class="eq-part-label">u (3×1) — random intercepts</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell hl-alice val">u_Alice</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val">u_Bob</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val">u_Cara</div></div>
+            </div>
+          </div>
+          <div class="m-label-col">
+            <span style="color:var(--fixed-col);">← "Alice pauses +0.35 SD more than average"</span>
+            <span style="color:var(--random-col);">← "Bob pauses −0.18 SD less than average"</span>
+            <span style="color:var(--rust);">← "Cara pauses +0.52 SD more than average"</span>
+          </div>
+        </div>
+
+        <p>These are assumed drawn from a normal distribution: <strong>u ~ N(0, σ²_u)</strong>. That's the "random" part — we treat Alice, Bob, and Cara as a random sample from a population of patients, not specific fixed levels. We don't estimate u_Alice directly; we estimate σ²_u (how much patients vary in general) and then infer each person's offset.</p>
+
+        <h3>What is Z?</h3>
+        <p>Here's the key question: <strong>when we want to add u_Alice's offset to Alice's rows in Y, how does the model know which rows belong to Alice?</strong></p>
+        <p>That's exactly what Z does. Z is a membership table — it tells the model which rows in Y belong to which patient in u. Click the patient buttons to see how Z maps observations to patients:</p>
+
+        <div class="hl-btns">
+          <button class="hl-btn alice" id="zbtn-alice" onclick="hlZ('alice')">● Highlight Alice</button>
+          <button class="hl-btn bob"   id="zbtn-bob"   onclick="hlZ('bob')">● Highlight Bob</button>
+          <button class="hl-btn cara"  id="zbtn-cara"  onclick="hlZ('cara')">● Highlight Cara</button>
+          <button class="hl-btn" style="border-color:var(--border-dark);color:var(--ink-ghost);" onclick="hlZ(null)">Clear</button>
+        </div>
+
+        <div class="eq-build" style="justify-content:center; gap:1.2rem;">
+          <div class="eq-part">
+            <div class="eq-part-label">Z (6×3) — random effects design matrix</div>
+            <div class="matrix-box" id="zMatrix">
+              <!-- Row 1: Alice obs 1 → Alice col = 1 -->
+              <div class="m-row">
+                <div class="m-cell one hl-alice" id="z11">1</div>
+                <div class="m-cell zero"         id="z12">0</div>
+                <div class="m-cell zero"         id="z13">0</div>
+              </div>
+              <!-- Row 2: Alice obs 2 → Alice col = 1 -->
+              <div class="m-row">
+                <div class="m-cell one hl-alice" id="z21">1</div>
+                <div class="m-cell zero"         id="z22">0</div>
+                <div class="m-cell zero"         id="z23">0</div>
+              </div>
+              <!-- Row 3: Bob obs 1 → Bob col = 1 -->
+              <div class="m-row">
+                <div class="m-cell zero"         id="z31">0</div>
+                <div class="m-cell one hl-bob"   id="z32">1</div>
+                <div class="m-cell zero"         id="z33">0</div>
+              </div>
+              <!-- Row 4: Bob obs 2 → Bob col = 1 -->
+              <div class="m-row">
+                <div class="m-cell zero"         id="z41">0</div>
+                <div class="m-cell one hl-bob"   id="z42">1</div>
+                <div class="m-cell zero"         id="z43">0</div>
+              </div>
+              <!-- Row 5: Cara obs 1 → Cara col = 1 -->
+              <div class="m-row">
+                <div class="m-cell zero"         id="z51">0</div>
+                <div class="m-cell zero"         id="z52">0</div>
+                <div class="m-cell one hl-cara"  id="z53">1</div>
+              </div>
+              <!-- Row 6: Cara obs 2 → Cara col = 1 -->
+              <div class="m-row">
+                <div class="m-cell zero"         id="z61">0</div>
+                <div class="m-cell zero"         id="z62">0</div>
+                <div class="m-cell one hl-cara"  id="z63">1</div>
+              </div>
+            </div>
+          </div>
+          <div class="eq-op">×</div>
+          <div class="eq-part">
+            <div class="eq-part-label">u (3×1)</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell hl-alice val" id="uA">u_A</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val" id="uB">u_B</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val" id="uC">u_C</div></div>
+            </div>
+          </div>
+          <div class="eq-op">=</div>
+          <div class="eq-part">
+            <div class="eq-part-label">Zu — per-row patient offsets</div>
+            <div class="matrix-box">
+              <div class="m-row"><div class="m-cell hl-alice val">u_A</div></div>
+              <div class="m-row"><div class="m-cell hl-alice val">u_A</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val">u_B</div></div>
+              <div class="m-row"><div class="m-cell hl-bob   val">u_B</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val">u_C</div></div>
+              <div class="m-row"><div class="m-cell hl-cara  val">u_C</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout teal" style="margin-top:1.5rem;">
+          <div class="callout-label">The "aha" moment for Z</div>
+          <p>When you multiply Z × u, each row of the result gets exactly the u value for the patient that row belongs to. Row 1 (Alice's first observation) gets u_Alice. Row 3 (Bob's first) gets u_Bob. The Z matrix is literally asking: "For this row in Y, which patient should I paste their personal offset from?" The 1s are the "yes, this row belongs to this patient." The 0s are "not this patient."</p>
+          <p style="margin-top:0.75rem;">In real data with 100 patients and 2,600 rows, Z is a 2,600 × 100 matrix — very sparse (mostly zeros), which is why software uses efficient sparse matrix operations.</p>
+        </div>
+
+        <h3>Why not just add u to X?</h3>
+        <p>You might wonder: couldn't we just add patient_id as a predictor in X? Yes — that would be a <em>fixed effect</em> for patient. But that means estimating a separate β for each of 100 patients. That's 100 parameters just for patient identity, consuming enormous degrees of freedom, and crucially — it assumes those 100 patients are the only patients that matter. LMMs instead say: "Patients are a random sample from a population. I'll estimate one variance parameter (σ²_u) that describes how spread out patient offsets are, and infer each patient's offset from the data." Much more parsimonious, and allows generalisation.</p>
+      </div>
+    </div>
+
+    <!-- PUTTING IT TOGETHER -->
+    <div class="section-marker"><div class="sm-num">5</div><div class="sm-line"></div><div class="sm-label">The Full Equation</div></div>
+
+    <h2>One observation, <em>fully expanded</em></h2>
+    <p>Let's trace exactly what the model predicts for Alice's first observation (Row 1: PHQ-8 = 14, Y = 0.82):</p>
+
+    <div style="background:white; border:1px solid var(--border); padding:2rem; margin:1.5rem 0; font-family:'JetBrains Mono',monospace; font-size:0.85rem; line-height:2.2;">
+      <div style="color:var(--ink-ghost); margin-bottom:0.5rem; font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase;">// Prediction for Alice, Week 2</div>
+      Y₁ = <span style="color:var(--fixed-col);">[β₀ + β₁ × 14]</span> + <span style="color:var(--random-col);">[u_Alice]</span> + <span style="color:var(--rust);">[ε₁]</span><br>
+      0.82 = <span style="color:var(--fixed-col);">[−0.50 + 0.08 × 14]</span> + <span style="color:var(--random-col);">[+0.26]</span> + <span style="color:var(--rust);">[−0.06]</span><br>
+      0.82 = <span style="color:var(--fixed-col);">0.62</span> &nbsp;+ <span style="color:var(--random-col);">0.26</span> + <span style="color:var(--rust);">(−0.06)</span><br><br>
+      <div style="font-size:0.72rem; color:var(--ink-ghost);">
+        <span style="color:var(--fixed-col);">0.62</span> = "A person with PHQ-8=14 is expected to be 0.62 SD above their own baseline"<br>
+        <span style="color:var(--random-col);">+0.26</span> = "Alice personally tends to pause 0.26 SD more than the average patient"<br>
+        <span style="color:var(--rust);">−0.06</span> = "On this specific day, Alice was slightly less affected than expected"
+      </div>
+    </div>
+
+    <!-- VARIANCE COMPONENTS -->
+    <div class="section-marker"><div class="sm-num">6</div><div class="sm-line"></div><div class="sm-label">Variance Components & ICC</div></div>
+
+    <h2>How much variation is <em>between</em> vs. <em>within</em> patients?</h2>
+    <p>The LMM estimates two variance components: σ²_u (how much patients differ from each other) and σ²_ε (how much observations vary within a patient after accounting for fixed effects). Their ratio tells you something crucial.</p>
+
+    <div class="var-vis">
+      <div class="var-panel">
+        <div class="var-panel-title">// Variance split — adjust with slider</div>
+        <p style="font-size:0.85rem; color:var(--ink-faint); margin-bottom:1rem;">ICC (Intraclass Correlation Coefficient) = σ²_u / (σ²_u + σ²_ε)</p>
+        <label style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--ink-ghost);">σ²_u (between-patient variance): <span id="sig2u-val">0.30</span></label><br>
+        <input type="range" min="0" max="100" value="30" id="sig2u-slider" oninput="updateICC()" style="width:100%; margin:0.5rem 0 1rem; accent-color:var(--random-col);">
+        <label style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--ink-ghost);">σ²_ε (within-patient variance): <span id="sig2e-val">0.20</span></label><br>
+        <input type="range" min="0" max="100" value="20" id="sig2e-slider" oninput="updateICC()" style="width:100%; margin:0.5rem 0 1rem; accent-color:var(--rust);">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:600; color:var(--navy); margin-top:0.5rem;">ICC = <span id="icc-val">0.60</span></div>
+        <div style="font-size:0.82rem; color:var(--ink-faint); margin-top:0.5rem;" id="icc-interp">60% of variance is due to stable patient identity. This is high — random effects are essential.</div>
+      </div>
+      <div class="var-panel">
+        <div class="var-panel-title">// What ICC means for your analysis</div>
+        <div style="font-size:0.88rem; color:var(--ink-faint); line-height:1.7;">
+          <p><strong style="color:var(--navy);">ICC near 0:</strong> Patients don't differ much from each other. Most variance is within-patient. Random effects add little. A simpler model might suffice.</p>
+          <p><strong style="color:var(--navy);">ICC 0.3–0.6:</strong> Substantial between-patient differences. Random effects are clearly needed. Your SE corrections will be meaningful.</p>
+          <p><strong style="color:var(--navy);">ICC near 1:</strong> Almost all variance is between patients. Within-patient change is small relative to individual differences. This would mean your biomarker (within-patient change) has very little signal to detect.</p>
+          <p>In typical RADAR-CNS work, ICC for acoustic features tends to be moderate (0.3–0.6), meaning the model is capturing real individual differences while still having detectable within-patient signal.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANDOM SLOPES -->
+    <div class="section-marker"><div class="sm-num">7</div><div class="sm-line"></div><div class="sm-label">Extension: Random Slopes</div></div>
+
+    <h2>What if the PHQ-8 effect <em>also varies</em> per patient?</h2>
+    <p>So far we've assumed: one PHQ-8 slope β₁ for everyone (fixed), but each person has a different baseline (random intercept). That's <code>(1|patient)</code> in R syntax.</p>
+    <p>But what if some patients show a strong vocal response to depression while others show almost none? You can add a <strong>random slope</strong>: let the PHQ-8 coefficient also vary by patient.</p>
+
+    <div class="code-block">
+      <span class="c-comment"># Random intercept only (intercept varies per patient)</span><br>
+      <span class="c-key">lmer</span>(pause_z ~ <span class="c-val">phq8</span> + (<span class="c-str">1</span>|patient))<br><br>
+      <span class="c-comment"># Random intercept + random slope (both vary per patient)</span><br>
+      <span class="c-key">lmer</span>(pause_z ~ <span class="c-val">phq8</span> + (<span class="c-str">1 + phq8</span>|patient))<br><br>
+      <span class="c-comment"># What this means:</span><br>
+      <span class="c-comment"># u is now a 2-vector per patient: [intercept_offset, slope_offset]</span><br>
+      <span class="c-comment"># u_Alice = [+0.26, +0.03]  — Alice: higher baseline, slightly steeper PHQ-8 response</span><br>
+      <span class="c-comment"># u_Bob   = [-0.18, -0.01]  — Bob:   lower baseline, slightly flatter response</span>
+    </div>
+
+    <p>With random slopes, u becomes a 2×1 vector per patient (intercept offset + slope offset), and G becomes a 2×2 covariance matrix. The off-diagonal of G tells you: are patients with higher baselines also more reactive to depression? Interesting science lives in that covariance.</p>
+
+    <div class="callout navy" style="margin-top:3rem;">
+      <div class="callout-label">Next: RADAR-CNS Application</div>
+      <p>You now understand every piece of the equation — what X, β, Z, u, and ε each mean, built from actual data. The final chapter shows how this all applies in the full RADAR-CNS depression pipeline. <a href="radar.html" style="color:var(--gold);">Chapter 04 →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · The Math · Chapter 03 of 04</p></footer>
+
+<script>
+function toggleAcc(h) { h.classList.toggle('open'); h.nextElementSibling.classList.toggle('open'); }
+
+// Highlight table rows + Z matrix
+function highlight(patient) {
+  document.querySelectorAll('.data-table tbody tr').forEach(r => {
+    r.classList.toggle('hl', r.dataset.p === patient);
+  });
+  hlZ(patient);
+  ['alice','bob','cara'].forEach(p => {
+    document.getElementById('btn-'+p).classList.toggle('on', p===patient);
+  });
+}
+function clearHighlight() {
+  document.querySelectorAll('.data-table tbody tr').forEach(r=>r.classList.remove('hl'));
+  hlZ(null);
+  ['alice','bob','cara'].forEach(p=>document.getElementById('btn-'+p).classList.remove('on'));
+}
+
+const Z_ALICE_CELLS = ['z11','z12','z13','z21','z22','z23'];
+const Z_BOB_CELLS   = ['z31','z32','z33','z41','z42','z43'];
+const Z_CARA_CELLS  = ['z51','z52','z53','z61','z62','z63'];
+
+function hlZ(patient) {
+  const allCells = [...Z_ALICE_CELLS,...Z_BOB_CELLS,...Z_CARA_CELLS,'uA','uB','uC'];
+  allCells.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.style.outline=''; el.style.boxShadow=''; }
+  });
+  if(!patient) { ['zbtn-alice','zbtn-bob','zbtn-cara'].forEach(id=>document.getElementById(id).classList.remove('on')); return; }
+
+  const rows = patient==='alice'?Z_ALICE_CELLS : patient==='bob'?Z_BOB_CELLS:Z_CARA_CELLS;
+  const uId  = patient==='alice'?'uA':patient==='bob'?'uB':'uC';
+  const color = patient==='alice'?'var(--fixed-col)':patient==='bob'?'var(--random-col)':'var(--rust)';
+
+  rows.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.outline=`2px solid ${color}`;
+  });
+  const uEl=document.getElementById(uId);
+  if(uEl) uEl.style.boxShadow=`0 0 0 3px ${color}`;
+
+  ['alice','bob','cara'].forEach(p=>document.getElementById('zbtn-'+p).classList.toggle('on',p===patient));
+}
+
+// ICC slider
+function updateICC() {
+  const u=parseInt(document.getElementById('sig2u-slider').value)/100;
+  const e=parseInt(document.getElementById('sig2e-slider').value)/100;
+  document.getElementById('sig2u-val').textContent=u.toFixed(2);
+  document.getElementById('sig2e-val').textContent=e.toFixed(2);
+  const icc = (u+e)===0 ? 0 : u/(u+e);
+  document.getElementById('icc-val').textContent=icc.toFixed(2);
+  let interp='';
+  if(icc<0.1) interp='Very low ICC. Patients barely differ. Random intercept adds little — check if it is needed.';
+  else if(icc<0.3) interp='Low ICC. Some between-patient variance. Random effects worthwhile but modest correction.';
+  else if(icc<0.6) interp='Moderate ICC. Substantial patient differences. Random effects clearly necessary.';
+  else if(icc<0.85) interp='High ICC. Most variance is between-patient identity. Strong random effects needed.';
+  else interp='Very high ICC. Almost all variance is who the patient is. Within-patient signal is small relative to baseline differences.';
+  document.getElementById('icc-interp').textContent=interp;
+}
+</script>
+</body>
+</html>

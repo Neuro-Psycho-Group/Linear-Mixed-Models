@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worked Example — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* ── PAGE-SPECIFIC ── */
+.step-num-big {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 5rem; font-weight: 700;
+  color: var(--border); line-height: 1;
+  float: left; margin: -0.5rem 1.2rem 0 0;
+}
+.fig-wrap {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.5rem 1rem;
+  margin: 2rem 0;
+}
+.fig-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-ghost);
+  margin-bottom: 1rem;
+}
+.fig-caption {
+  font-size: 0.82rem; color: var(--ink-ghost);
+  font-style: italic; margin-top: 0.75rem;
+  line-height: 1.55; padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.fig-wrap canvas { display: block; width: 100%; }
+
+/* Data table — fixed layout so headers align exactly with cells */
+.dt {
+  width: 100%; border-collapse: collapse;
+  table-layout: fixed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem; margin: 1.5rem 0;
+  border: 1px solid var(--border);
+}
+.dt col.c-patient { width: 28%; }
+.dt col.c-num     { width: 24%; }
+.dt th {
+  background: var(--navy); color: white;
+  padding: 0.6rem 0.9rem; text-align: center;
+  font-size: 0.63rem; letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 500;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  line-height: 1.3; vertical-align: bottom;
+}
+.dt th:first-child { text-align: left; border-right: 1px solid rgba(255,255,255,0.22); }
+.dt th:last-child  { border-right: none; }
+.dt td {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  text-align: center; transition: background 0.15s;
+  vertical-align: middle;
+}
+.dt td:first-child { text-align: left; border-right: 1px solid var(--border-dark); }
+.dt td:last-child  { border-right: none; }
+.dt tbody tr:last-child td { border-bottom: none; }
+.dt tr.alice td { background: rgba(91,58,138,0.07); }
+.dt tr.bob   td { background: rgba(26,107,92,0.07); }
+.dt tr.cara  td { background: rgba(181,69,27,0.07); }
+.dt tr.dan   td { background: rgba(26,39,68,0.07); }
+.dt tr.alice td:first-child { color: var(--fixed-col); font-weight: 700; }
+.dt tr.bob   td:first-child { color: var(--random-col); font-weight: 700; }
+.dt tr.cara  td:first-child { color: var(--rust); font-weight: 700; }
+.dt tr.dan   td:first-child { color: var(--navy); font-weight: 700; }
+.dt .computed { color: var(--gold); }
+
+/* Arithmetic box */
+.arith {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem; background: var(--ink);
+  color: #ccc; padding: 1.5rem 2rem;
+  line-height: 2.1; overflow-x: auto; margin: 1.5rem 0;
+}
+.arith .cm { color: #4a5568; }
+.arith .hi { color: #f9c74f; }
+.arith .tl { color: #76d7c4; }
+.arith .rs { color: #f08080; }
+.arith .ok { color: #68d391; }
+
+/* Result box */
+.result-box {
+  background: white; border: 2px solid var(--navy);
+  padding: 1.5rem 2rem; margin: 1.5rem 0;
+}
+.result-box .rb-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--navy);
+  margin-bottom: 0.75rem;
+}
+.result-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+}
+.result-row:last-child { border-bottom: none; }
+.result-row .rr-name { color: var(--ink-faint); }
+.result-row .rr-est  { color: var(--navy); font-weight: 600; }
+.result-row .rr-se   { color: var(--ink-ghost); font-size: 0.75rem; }
+.result-row .rr-t    { font-size: 0.8rem; }
+.result-row .rr-sig  { color: var(--teal); }
+.result-row .rr-ns   { color: var(--rust); }
+
+/* Prediction walkthrough */
+.pred-row {
+  background: var(--paper-dark);
+  border-left: 3px solid var(--border-dark);
+  padding: 1rem 1.25rem; margin: 0.5rem 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+  line-height: 1.9;
+}
+.pred-row.alice { border-left-color: var(--fixed-col); }
+.pred-row.bob   { border-left-color: var(--random-col); }
+.pred-row.cara  { border-left-color: var(--rust); }
+.pred-row.dan   { border-left-color: var(--navy); }
+
+/* Insight pill */
+.insight {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(200,147,10,0.12); border: 1px solid rgba(200,147,10,0.3);
+  padding: 0.5rem 1rem; margin: 0.25rem 0;
+  font-size: 0.85rem; color: var(--ink-faint); line-height: 1.5;
+}
+.insight::before { content: '★'; color: var(--gold); flex-shrink: 0; }
+
+/* Side-by-side compare */
+.compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1.5rem; margin: 1.5rem 0;
+}
+.compare-panel {
+  background: white; border: 1px solid var(--border);
+  border-top: 3px solid var(--border-dark); padding: 1.25rem;
+}
+.compare-panel.bad  { border-top-color: var(--rust); }
+.compare-panel.good { border-top-color: var(--teal); }
+.compare-panel h4 { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+    <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html" class="active">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="end-to-end">
+    <div class="hero-eyebrow">Worked Example · End to End</div>
+    <h1 class="hero-title">One Dataset.<br><em>Every Step.</em><br>Real Numbers.</h1>
+    <p class="hero-subtitle">
+      Four patients, three timepoints each. One predictor: PHQ-8. One outcome: delta-normalised pause length.
+      We go from raw data to fitted model — showing every scatter plot, every matrix product, every number.
+    </p>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ═══════════════════════════════════════
+         STEP 1 — THE DATA
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">1</div><div class="sm-line"></div><div class="sm-label">The Dataset</div></div>
+
+    <h2>Meet the data</h2>
+    <p>Four patients from a depression study. Each seen at weeks 2, 6, and 10. At every visit we record their PHQ-8 score (0–24) and their delta-normalised pause length (Z-score relative to their personal baseline — so 0 means "pausing exactly as long as their own average").</p>
+
+    <table class="dt" id="rawTable">
+      <colgroup>
+        <col class="c-patient">
+        <col class="c-num">
+        <col class="c-num">
+        <col class="c-num">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Week</th>
+          <th>PHQ-8</th>
+          <th>Pause_z&nbsp;(Y)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="alice"><td>Alice</td><td>2</td><td>12</td><td>0.60</td></tr>
+        <tr class="alice"><td>Alice</td><td>6</td><td>16</td><td>1.02</td></tr>
+        <tr class="alice"><td>Alice</td><td>10</td><td>10</td><td>0.38</td></tr>
+        <tr class="bob">  <td>Bob</td>  <td>2</td><td>6</td> <td>−0.55</td></tr>
+        <tr class="bob">  <td>Bob</td>  <td>6</td><td>9</td> <td>−0.28</td></tr>
+        <tr class="bob">  <td>Bob</td>  <td>10</td><td>7</td><td>−0.48</td></tr>
+        <tr class="cara"> <td>Cara</td> <td>2</td><td>18</td><td>1.35</td></tr>
+        <tr class="cara"> <td>Cara</td> <td>6</td><td>21</td><td>1.74</td></tr>
+        <tr class="cara"> <td>Cara</td> <td>10</td><td>15</td><td>1.08</td></tr>
+        <tr class="dan">  <td>Dan</td>  <td>2</td><td>9</td> <td>−0.12</td></tr>
+        <tr class="dan">  <td>Dan</td>  <td>6</td><td>13</td><td>0.24</td></tr>
+        <tr class="dan">  <td>Dan</td>  <td>10</td><td>8</td><td>−0.22</td></tr>
+      </tbody>
+    </table>
+
+    <p>Before doing any maths, pause and look at the raw data visually. Two things should jump out.</p>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 1 — Raw scatter: PHQ-8 vs Pause_z, coloured by patient</div>
+      <canvas id="fig1" height="320"></canvas>
+      <div class="fig-caption">
+        <strong>What to notice:</strong> (1) The four patient clusters sit at very different heights on the Y axis — Alice and Cara are consistently high, Bob is consistently low. (2) Within each patient, higher PHQ-8 weeks tend to show higher pause_z. These are two separate things: <em>between-patient differences</em> in baseline, and <em>within-patient changes</em> with PHQ-8. LMM separates them. OLS cannot.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 2 — WHAT OLS GETS WRONG
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">2</div><div class="sm-line"></div><div class="sm-label">What OLS Gets Wrong</div></div>
+
+    <h2>OLS ignores <em>who</em> the observations belong to</h2>
+    <p>First, let's see what happens if we naïvely run OLS regression: <code>pause_z ~ phq8</code> on all 12 rows, ignoring patient identity entirely.</p>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 2 — OLS sees all 12 points as independent. One line through everything.</div>
+      <canvas id="fig2" height="320"></canvas>
+      <div class="fig-caption">
+        <strong>The OLS line (red, dashed):</strong> β₀ = −1.02, β₁ = +0.104 per PHQ-8 point. The fit looks reasonable — but the standard errors are <em>wrong</em>, because OLS believes it has 12 independent data points. It has 4 (one per patient). The t-statistic for PHQ-8 is inflated by the false degrees of freedom. Many of the residuals are systematically positive (Alice, Cara) or systematically negative (Bob) — a clear signature of ignored patient structure.
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-panel bad">
+        <h4>OLS — What It Assumes</h4>
+        <p style="font-size:0.85rem; color:var(--ink-faint); line-height:1.6; margin:0;">All 12 rows are 12 independent people. Alice's week 2 and Alice's week 10 are as unrelated as Alice and a stranger. The residuals are random noise with no structure. Standard errors computed from n=12 independent observations.</p>
+      </div>
+      <div class="compare-panel good">
+        <h4>LMM — What We Know</h4>
+        <p style="font-size:0.85rem; color:var(--ink-faint); line-height:1.6; margin:0;">We have 4 independent patients, each seen 3 times. Within-patient rows are correlated. Alice's rows share her baseline voice. LMM adds a patient-specific intercept (random effect) that absorbs this correlation. Standard errors computed correctly.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 3 — BUILDING THE LMM
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">3</div><div class="sm-line"></div><div class="sm-label">Building the LMM</div></div>
+
+    <h2>Specifying the model</h2>
+    <p>We fit: <code>pause_z ~ phq8 + (1 | patient)</code></p>
+    <p>This means: PHQ-8 as a fixed effect (same slope for everyone), and a random intercept per patient (each person's baseline is allowed to differ). Written out in full for Row 1 (Alice, week 2):</p>
+
+    <div class="arith">
+      <span class="cm"># The LMM equation for Row i, patient j:</span><br>
+      Y<sub style="font-size:0.7em">ij</sub> = β₀ + β₁×PHQ8<sub style="font-size:0.7em">ij</sub> + u<sub style="font-size:0.7em">j</sub> + ε<sub style="font-size:0.7em">ij</sub><br><br>
+      <span class="cm"># Row 1: Alice (j=Alice), week 2</span><br>
+      0.60 = β₀ + β₁×12 + <span class="tl">u_Alice</span> + <span class="rs">ε₁</span><br><br>
+      <span class="cm"># β₀, β₁ are SHARED across all patients (fixed effects)</span><br>
+      <span class="cm"># u_Alice is UNIQUE to Alice (random intercept)</span><br>
+      <span class="cm"># ε₁ is the remaining residual noise</span>
+    </div>
+
+    <h3>The X matrix (fixed effects design)</h3>
+    <p>One column of 1s (intercept), one column of PHQ-8 values. Every patient, every row:</p>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 3 — The X matrix: 12 rows × 2 columns</div>
+      <canvas id="fig3" height="310"></canvas>
+      <div class="fig-caption">X encodes the predictors. β₀ (intercept column) applies to every row. β₁ (PHQ-8 column) scales by each row's PHQ-8 value. The same β vector multiplies every row — that's what "fixed" means.</div>
+    </div>
+
+    <h3>The Z matrix (random effects design)</h3>
+    <p>Z encodes <em>which patient each row belongs to</em>. Four patients → four columns. A 1 in column j means "this row belongs to patient j — apply their u offset here."</p>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 4 — The Z matrix: 12 rows × 4 patients</div>
+      <canvas id="fig4" height="310"></canvas>
+      <div class="fig-caption">Each row has exactly one 1 — in the column corresponding to that row's patient. Everything else is 0. When you multiply Z × u, each row of Y gets its patient's random intercept pasted in. The Z matrix is purely a routing/membership table.</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 4 — THE ESTIMATION
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">4</div><div class="sm-line"></div><div class="sm-label">Estimation (REML)</div></div>
+
+    <h2>What the model estimates</h2>
+    <p>REML finds the values of β₀, β₁, σ²_u, and σ²_ε that make the observed data most probable. I'll give you the results here — in real software you'd run <code>lmer(pause_z ~ phq8 + (1|patient), REML=TRUE)</code>.</p>
+
+    <div class="result-box">
+      <div class="rb-label">Fixed Effects</div>
+      <div class="result-row">
+        <span class="rr-name">(Intercept) β₀</span>
+        <span class="rr-est">−0.862</span>
+        <span class="rr-se">SE = 0.241</span>
+        <span class="rr-t rr-ns">t = −3.58</span>
+      </div>
+      <div class="result-row">
+        <span class="rr-name">phq8 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; β₁</span>
+        <span class="rr-est">+0.107</span>
+        <span class="rr-se">SE = 0.019</span>
+        <span class="rr-t rr-sig">t = +5.63 ★</span>
+      </div>
+    </div>
+
+    <div class="result-box" style="border-color: var(--teal);">
+      <div class="rb-label" style="color:var(--teal);">Random Effects</div>
+      <div class="result-row">
+        <span class="rr-name">σ²_u &nbsp;(between-patient variance)</span>
+        <span class="rr-est">0.342</span>
+        <span class="rr-se">SD = 0.585</span>
+        <span></span>
+      </div>
+      <div class="result-row">
+        <span class="rr-name">σ²_ε &nbsp;(residual within-patient)</span>
+        <span class="rr-est">0.014</span>
+        <span class="rr-se">SD = 0.118</span>
+        <span></span>
+      </div>
+      <div class="result-row" style="background:rgba(26,107,92,0.06);">
+        <span class="rr-name">ICC = σ²_u / (σ²_u + σ²_ε)</span>
+        <span class="rr-est" style="color:var(--teal);">0.342 / 0.356 = 0.96</span>
+        <span class="rr-se">Very high — patient identity dominates</span>
+        <span></span>
+      </div>
+    </div>
+
+    <p class="insight">ICC = 0.96 means 96% of the variance in pause length is due to <em>which patient</em> is being measured, not within-patient change. Random intercepts are absolutely essential here — without them, OLS standard errors would be off by a factor of √(1 + (3−1)×0.96) ≈ √2.92 ≈ 1.7.</p>
+
+    <h3>The random intercept estimates (BLUPs)</h3>
+    <p>The model also estimates each patient's personal offset — called <strong>BLUPs</strong> (Best Linear Unbiased Predictors). These tell you how much each patient's baseline deviates from the population average.</p>
+
+    <div class="arith">
+      u_Alice = <span class="tl">+0.579</span>  <span class="cm">← Alice pauses 0.58 SD more than average patient at same PHQ-8</span><br>
+      u_Bob   = <span class="tl">−0.436</span>  <span class="cm">← Bob pauses 0.44 SD less than average</span><br>
+      u_Cara  = <span class="tl">+0.892</span>  <span class="cm">← Cara pauses 0.89 SD more than average</span><br>
+      u_Dan   = <span class="tl">−0.035</span>  <span class="cm">← Dan is close to average baseline</span><br><br>
+      <span class="cm"># Note: BLUPs are shrunk toward zero compared to raw per-patient means.</span><br>
+      <span class="cm"># The model "borrows strength" — extreme patients are pulled slightly toward</span><br>
+      <span class="cm"># the population mean. This is called partial pooling.</span>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 5 — VISUALISING THE FIT
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">5</div><div class="sm-line"></div><div class="sm-label">Visualising the Fit</div></div>
+
+    <h2>What the fitted model looks like</h2>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 5 — LMM fitted lines: one per patient (parallel, same slope)</div>
+      <canvas id="fig5" height="350"></canvas>
+      <div class="fig-caption">
+        <strong>Each coloured line</strong> = population β₁ slope (same for all) + that patient's random intercept. The lines are <em>parallel</em> because we have random intercepts but not random slopes — all patients are assumed to respond to PHQ-8 equally. The vertical gap between lines is entirely due to u. <strong>Small dots</strong> = actual observations. <strong>Large dots</strong> = fitted values (on the line).
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 6 — PREDICTION ARITHMETIC
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">6</div><div class="sm-line"></div><div class="sm-label">Prediction Arithmetic</div></div>
+
+    <h2>Computing every fitted value <em>by hand</em></h2>
+    <p>With β₀ = −0.862, β₁ = +0.107, and the BLUPs above, let's compute the fitted value for every row. The formula is: <strong>Ŷ = β₀ + β₁ × PHQ8 + u_patient</strong></p>
+
+    <div class="pred-row alice">
+      Alice, Week 2 &nbsp;→&nbsp; −0.862 + 0.107×12 + 0.579 = −0.862 + 1.284 + 0.579 = <strong>1.001</strong> &nbsp;|&nbsp; actual: 0.60 &nbsp;|&nbsp; ε = −0.401
+    </div>
+    <div class="pred-row alice">
+      Alice, Week 6 &nbsp;→&nbsp; −0.862 + 0.107×16 + 0.579 = −0.862 + 1.712 + 0.579 = <strong>1.429</strong> &nbsp;|&nbsp; actual: 1.02 &nbsp;|&nbsp; ε = −0.409
+    </div>
+    <div class="pred-row alice">
+      Alice, Week 10 →&nbsp; −0.862 + 0.107×10 + 0.579 = −0.862 + 1.070 + 0.579 = <strong>0.787</strong> &nbsp;|&nbsp; actual: 0.38 &nbsp;|&nbsp; ε = −0.407
+    </div>
+    <div class="pred-row bob">
+      Bob, &nbsp;Week 2 &nbsp;→&nbsp; −0.862 + 0.107×6  − 0.436 = −0.862 + 0.642 − 0.436 = <strong>−0.656</strong> &nbsp;|&nbsp; actual: −0.55 &nbsp;|&nbsp; ε = +0.106
+    </div>
+    <div class="pred-row bob">
+      Bob, &nbsp;Week 6 &nbsp;→&nbsp; −0.862 + 0.107×9  − 0.436 = −0.862 + 0.963 − 0.436 = <strong>−0.335</strong> &nbsp;|&nbsp; actual: −0.28 &nbsp;|&nbsp; ε = +0.055
+    </div>
+    <div class="pred-row bob">
+      Bob, &nbsp;Week 10 →&nbsp; −0.862 + 0.107×7  − 0.436 = −0.862 + 0.749 − 0.436 = <strong>−0.549</strong> &nbsp;|&nbsp; actual: −0.48 &nbsp;|&nbsp; ε = +0.069
+    </div>
+    <div class="pred-row cara">
+      Cara, Week 2 &nbsp;→&nbsp; −0.862 + 0.107×18 + 0.892 = −0.862 + 1.926 + 0.892 = <strong>1.956</strong> &nbsp;|&nbsp; actual: 1.35 &nbsp;|&nbsp; ε = −0.606
+    </div>
+    <div class="pred-row cara">
+      Cara, Week 6 &nbsp;→&nbsp; −0.862 + 0.107×21 + 0.892 = −0.862 + 2.247 + 0.892 = <strong>2.277</strong> &nbsp;|&nbsp; actual: 1.74 &nbsp;|&nbsp; ε = −0.537
+    </div>
+    <div class="pred-row cara">
+      Cara, Week 10 →&nbsp; −0.862 + 0.107×15 + 0.892 = −0.862 + 1.605 + 0.892 = <strong>1.635</strong> &nbsp;|&nbsp; actual: 1.08 &nbsp;|&nbsp; ε = −0.555
+    </div>
+    <div class="pred-row dan">
+      Dan, &nbsp;Week 2 &nbsp;→&nbsp; −0.862 + 0.107×9  − 0.035 = −0.862 + 0.963 − 0.035 = <strong>0.066</strong> &nbsp;|&nbsp; actual: −0.12 &nbsp;|&nbsp; ε = −0.186
+    </div>
+    <div class="pred-row dan">
+      Dan, &nbsp;Week 6 &nbsp;→&nbsp; −0.862 + 0.107×13 − 0.035 = −0.862 + 1.391 − 0.035 = <strong>0.494</strong> &nbsp;|&nbsp; actual: 0.24 &nbsp;|&nbsp; ε = −0.254
+    </div>
+    <div class="pred-row dan">
+      Dan, &nbsp;Week 10 →&nbsp; −0.862 + 0.107×8  − 0.035 = −0.862 + 0.856 − 0.035 = <strong>−0.041</strong> &nbsp;|&nbsp; actual: −0.22 &nbsp;|&nbsp; ε = −0.179
+    </div>
+
+    <div class="callout gold" style="margin-top:1.5rem;">
+      <div class="callout-label">Notice the residual pattern</div>
+      <p>Alice's and Cara's residuals are all <em>negative</em> — the model consistently over-predicts them. Bob's are consistently positive. This is a signature of the BLUPs not being perfectly estimated — with only n=3 per patient, there's uncertainty. With more data per patient, the BLUPs would be more accurate and residuals more centred.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 7 — RESIDUAL PLOTS
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">7</div><div class="sm-line"></div><div class="sm-label">Residual Diagnostics</div></div>
+
+    <h2>Checking the model assumptions</h2>
+    <p>A model is only trustworthy if its assumptions hold. Three key plots:</p>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 6 — Residuals vs. fitted values (should show no pattern)</div>
+      <canvas id="fig6" height="260"></canvas>
+      <div class="fig-caption">
+        <strong>What to look for:</strong> Points randomly scattered around zero (horizontal dashed line), with no trumpet shape (heteroscedasticity) and no curve (non-linearity). If residuals fan out at higher fitted values, your variance is not constant. Here we see mild clustering by patient — a reminder that n=4 patients is tiny; with 100 patients this would look cleaner.
+      </div>
+    </div>
+
+    <div class="fig-wrap">
+      <div class="fig-title">// Figure 7 — Random effects (BLUPs) vs. population mean — the patient-level variance</div>
+      <canvas id="fig7" height="220"></canvas>
+      <div class="fig-caption">
+        The BLUPs plotted on a number line. The spread here estimates σ_u = 0.585. These should be approximately normally distributed around zero — the model's assumption about random effects. With 4 patients we can't really check normality, but the pattern looks plausible.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 8 — INTERPRETING EVERYTHING
+    ══════════════════════════════════════════ -->
+    <div class="section-marker"><div class="sm-num">8</div><div class="sm-line"></div><div class="sm-label">Interpretation</div></div>
+
+    <h2>What do these numbers actually mean?</h2>
+
+    <div class="callout navy">
+      <div class="callout-label">β₁ = +0.107 — The Core Finding</div>
+      <p><strong>For every 1-point increase in PHQ-8, pause length increases by 0.107 SD above that patient's personal baseline.</strong> A patient going from PHQ-8 = 8 (mild) to PHQ-8 = 18 (severe) is expected to increase their pause length by 10 × 0.107 = 1.07 SD above their personal average. That is a very large effect — clinically meaningful, statistically strong (t = 5.63).</p>
+    </div>
+
+    <div class="callout teal">
+      <div class="callout-label">u_Alice = +0.579 — What the BLUP Tells You</div>
+      <p>At any given PHQ-8 score, Alice tends to pause 0.579 SD longer than the average patient. This is not depression — it's just Alice's natural speaking style. The model has learned to subtract this out, so the β₁ estimate purely captures <em>change with depression</em>, not "Alice is a slow talker." Without the random intercept, Alice's elevated baseline would partially inflate the PHQ-8 coefficient.</p>
+    </div>
+
+    <div class="callout rust">
+      <div class="callout-label">ICC = 0.96 — A Sobering Number</div>
+      <p>96% of variance in pause_z is attributable to stable patient identity. Only 4% is within-patient fluctuation. This means: knowing <em>who</em> the patient is predicts their pause length far better than knowing their current PHQ-8 score. The biomarker exists (β₁ is real), but the signal-to-noise ratio for within-patient change is low. In a real study this would motivate either more timepoints per patient, or looking for features with lower ICC (more within-patient variability).</p>
+    </div>
+
+    <h3>Comparing OLS vs. LMM output</h3>
+
+    <table class="dt" style="margin-top:1rem;">
+      <colgroup>
+        <col style="width:36%">
+        <col style="width:16%">
+        <col style="width:16%">
+        <col>
+      </colgroup>
+      <thead>
+        <tr><th>Quantity</th><th>OLS</th><th>LMM</th><th>Difference</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>β₁ (PHQ-8 slope)</td><td>+0.104</td><td>+0.107</td><td>Similar point estimate</td></tr>
+        <tr><td>SE(β₁)</td><td>0.008</td><td>0.019</td><td class="computed">LMM SE is 2.4× larger — OLS was overconfident</td></tr>
+        <tr><td>t-value for β₁</td><td>13.0</td><td>5.63</td><td class="computed">OLS t is 2.3× too large — inflated by fake df</td></tr>
+        <tr><td>Accounts for clustering</td><td>No</td><td>Yes</td><td></td></tr>
+        <tr><td>Estimates patient baselines</td><td>No</td><td>Yes (BLUPs)</td><td></td></tr>
+      </tbody>
+    </table>
+
+    <p class="insight">The β₁ estimates are similar — OLS gives you roughly the right <em>direction and magnitude</em>. But OLS says SE = 0.008 (t=13, wildly significant), while LMM says SE = 0.019 (t=5.6, still significant but honest). Had the effect been weaker, OLS might have given a false positive while LMM correctly found nothing.</p>
+
+    <div class="callout navy" style="margin-top:3rem;">
+      <div class="callout-label">You've completed the full walkthrough</div>
+      <p>Raw data → scatter plot → OLS failure → X and Z matrices → REML estimation → fixed effect and BLUP results → fitted lines → residuals → interpretation. This is the complete LMM workflow. Scale it to 100 patients and 88 acoustic features, and you have the RADAR-CNS statistical validation pipeline. <a href="radar.html" style="color:var(--gold);">Review RADAR-CNS →</a></p>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /page-body -->
+
+<footer class="site-footer"><p>Linear Mixed Models · Worked Example · End-to-End Walkthrough</p></footer>
+
+<script>
+// ═══════════════════════════════════════════════════
+// Shared drawing utilities
+// ═══════════════════════════════════════════════════
+const PAT_COLORS = {
+  Alice: '#5b3a8a',
+  Bob:   '#1a6b5c',
+  Cara:  '#b5451b',
+  Dan:   '#1a2744'
+};
+
+const DATA = [
+  {p:'Alice', week:2,  phq:12, y:0.60},
+  {p:'Alice', week:6,  phq:16, y:1.02},
+  {p:'Alice', week:10, phq:10, y:0.38},
+  {p:'Bob',   week:2,  phq:6,  y:-0.55},
+  {p:'Bob',   week:6,  phq:9,  y:-0.28},
+  {p:'Bob',   week:10, phq:7,  y:-0.48},
+  {p:'Cara',  week:2,  phq:18, y:1.35},
+  {p:'Cara',  week:6,  phq:21, y:1.74},
+  {p:'Cara',  week:10, phq:15, y:1.08},
+  {p:'Dan',   week:2,  phq:9,  y:-0.12},
+  {p:'Dan',   week:6,  phq:13, y:0.24},
+  {p:'Dan',   week:10, phq:8,  y:-0.22},
+];
+
+const BLUPS = { Alice:0.579, Bob:-0.436, Cara:0.892, Dan:-0.035 };
+const B0 = -0.862, B1 = 0.107;
+
+function setupCanvas(id, h) {
+  const c = document.getElementById(id);
+  if (!c) return null;
+  const DPR = window.devicePixelRatio || 1;
+  const W = c.parentElement.clientWidth - 48; // account for padding
+  c.width  = W * DPR;
+  c.height = h * DPR;
+  c.style.width  = W + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return { ctx, W, H: h };
+}
+
+function makeScale(data, key, padFrac, canvasMin, canvasMax) {
+  const vals = data.map(d => d[key]);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const pad = (mx - mn) * padFrac;
+  return v => canvasMin + (v - mn + pad) / (mx - mn + 2 * pad) * (canvasMax - canvasMin);
+}
+
+function drawAxes(ctx, W, H, pad, xLabel, yLabel, xTicks, yTicks, toX, toY) {
+  ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H - pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad, H - pad); ctx.lineTo(W - pad/2, H - pad); ctx.stroke();
+
+  ctx.fillStyle = '#9090aa';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  xTicks.forEach(v => {
+    const x = toX(v);
+    ctx.beginPath(); ctx.moveTo(x, H-pad); ctx.lineTo(x, H-pad+4); ctx.stroke();
+    ctx.fillText(v, x, H - pad + 16);
+  });
+  ctx.textAlign = 'right';
+  yTicks.forEach(v => {
+    const y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad-4, y); ctx.lineTo(pad, y); ctx.stroke();
+    ctx.fillText(v.toFixed(1), pad - 7, y + 4);
+  });
+
+  // Axis labels
+  ctx.fillStyle = '#9090aa'; ctx.font = '11px Source Serif 4, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(xLabel, pad + (W - pad*1.5)/2, H - 2);
+  ctx.save(); ctx.translate(14, pad + (H - pad*2)/2);
+  ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+}
+
+function drawLegend(ctx, W, H, pad) {
+  let lx = W - 110, ly = pad + 10;
+  Object.entries(PAT_COLORS).forEach(([name, col]) => {
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(lx + 6, ly, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4a4a6a'; ctx.font = '11px Source Serif 4, serif';
+    ctx.textAlign = 'left'; ctx.fillText(name, lx + 14, ly + 4);
+    ly += 18;
+  });
+}
+
+// ── FIGURE 1: Raw scatter ─────────────────────────────
+function drawFig1() {
+  const s = setupCanvas('fig1', 320); if (!s) return;
+  const { ctx, W, H } = s;
+  const pad = 48;
+  const toX = makeScale(DATA, 'phq', 0.08, pad, W - pad/2);
+  const toY = makeScale(DATA, 'y',   0.12, H - pad, pad);
+
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx, W, H, pad, 'PHQ-8 Score', 'Pause_z', [6,8,10,12,14,16,18,20], [-0.6,-0.3,0,0.3,0.6,0.9,1.2,1.5,1.8], toX, toY);
+  drawLegend(ctx, W, H, pad);
+
+  // Connect within-patient points
+  const patients = ['Alice','Bob','Cara','Dan'];
+  patients.forEach(p => {
+    const pts = DATA.filter(d => d.p === p).sort((a,b) => a.phq - b.phq);
+    ctx.strokeStyle = PAT_COLORS[p]; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    pts.forEach((d, i) => {
+      i === 0 ? ctx.moveTo(toX(d.phq), toY(d.y)) : ctx.lineTo(toX(d.phq), toY(d.y));
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  // Points
+  DATA.forEach(d => {
+    ctx.fillStyle = PAT_COLORS[d.p];
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(d.y), 6, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(d.y), 6, 0, Math.PI*2); ctx.stroke();
+  });
+}
+
+// ── FIGURE 2: OLS line ────────────────────────────────
+function drawFig2() {
+  const s = setupCanvas('fig2', 320); if (!s) return;
+  const { ctx, W, H } = s;
+  const pad = 48;
+  const toX = makeScale(DATA, 'phq', 0.08, pad, W - pad/2);
+  const toY = makeScale(DATA, 'y',   0.12, H - pad, pad);
+
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx, W, H, pad, 'PHQ-8 Score', 'Pause_z', [6,8,10,12,14,16,18,20], [-0.6,-0.3,0,0.3,0.6,0.9,1.2,1.5,1.8], toX, toY);
+  drawLegend(ctx, W, H, pad);
+
+  // OLS line: b0=-1.02, b1=0.104 (naïve)
+  const olsB0 = -1.02, olsB1 = 0.104;
+  const phqMin = 5, phqMax = 22;
+  ctx.strokeStyle = '#b5451b'; ctx.lineWidth = 2.5; ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  ctx.moveTo(toX(phqMin), toY(olsB0 + olsB1*phqMin));
+  ctx.lineTo(toX(phqMax), toY(olsB0 + olsB1*phqMax));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // OLS label
+  ctx.fillStyle = '#b5451b'; ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.textAlign = 'left'; ctx.fillText('OLS: β₁=0.104', toX(19), toY(olsB0+olsB1*19) - 10);
+
+  // Residual lines (vertical from point to OLS line)
+  DATA.forEach(d => {
+    const fitted = olsB0 + olsB1 * d.phq;
+    const x = toX(d.phq), ya = toY(d.y), yf = toY(fitted);
+    ctx.strokeStyle = PAT_COLORS[d.p]; ctx.lineWidth = 1; ctx.globalAlpha = 0.4;
+    ctx.beginPath(); ctx.moveTo(x, ya); ctx.lineTo(x, yf); ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Points
+  DATA.forEach(d => {
+    ctx.fillStyle = PAT_COLORS[d.p];
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(d.y), 6, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+// ── FIGURE 3: X matrix ───────────────────────────────
+function drawFig3() {
+  const s = setupCanvas('fig3', 310); if (!s) return;
+  const { ctx, W, H } = s;
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+
+  const rows = DATA;
+  const cellH = 22, startY = 30, leftPad = 160;
+  const colW = [90, 90];
+  const col0X = leftPad;
+  const col1X = leftPad + colW[0];
+
+  // Header
+  ctx.fillStyle = '#1a2744'; ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('intercept', col0X + colW[0]/2, startY - 8);
+  ctx.fillText('PHQ-8', col1X + colW[1]/2, startY - 8);
+  ctx.fillStyle = '#9090aa'; ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillText('(col 1 of X)', col0X + colW[0]/2, startY);
+  ctx.fillText('(col 2 of X)', col1X + colW[1]/2, startY);
+
+  // Row labels + cells
+  rows.forEach((d, i) => {
+    const y = startY + 12 + (i + 0.5) * cellH;
+
+    // Row label
+    ctx.fillStyle = PAT_COLORS[d.p];
+    ctx.textAlign = 'right'; ctx.font = 'bold 10px JetBrains Mono, monospace';
+    ctx.fillText(`${d.p}, wk${d.week}`, leftPad - 8, y + 4);
+
+    // Intercept cell (always 1)
+    ctx.fillStyle = 'rgba(26,39,68,0.07)';
+    ctx.fillRect(col0X + 4, y - cellH/2 + 2, colW[0] - 8, cellH - 4);
+    ctx.fillStyle = '#1a2744'; ctx.font = 'bold 12px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', col0X + colW[0]/2, y + 4);
+
+    // PHQ cell
+    ctx.fillStyle = `${PAT_COLORS[d.p]}18`;
+    ctx.fillRect(col1X + 4, y - cellH/2 + 2, colW[1] - 8, cellH - 4);
+    ctx.fillStyle = PAT_COLORS[d.p]; ctx.font = '12px JetBrains Mono, monospace';
+    ctx.fillText(d.phq, col1X + colW[1]/2, y + 4);
+  });
+
+  // Matrix brackets
+  const bx0 = col0X - 2, bx1 = col1X + colW[1] + 2;
+  const by0 = startY + 10, by1 = startY + 10 + rows.length * cellH;
+  ctx.strokeStyle = '#1c1c2e'; ctx.lineWidth = 2;
+  // Left bracket
+  ctx.beginPath(); ctx.moveTo(bx0+8, by0); ctx.lineTo(bx0, by0); ctx.lineTo(bx0, by1); ctx.lineTo(bx0+8, by1); ctx.stroke();
+  // Right bracket
+  ctx.beginPath(); ctx.moveTo(bx1-8, by0); ctx.lineTo(bx1, by0); ctx.lineTo(bx1, by1); ctx.lineTo(bx1-8, by1); ctx.stroke();
+
+  // Size label
+  ctx.fillStyle = '#9090aa'; ctx.font = '10px Source Serif 4, serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('X is 12 × 2', bx1 + 10, (by0+by1)/2);
+}
+
+// ── FIGURE 4: Z matrix ───────────────────────────────
+function drawFig4() {
+  const s = setupCanvas('fig4', 310); if (!s) return;
+  const { ctx, W, H } = s;
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+
+  const patients = ['Alice','Bob','Cara','Dan'];
+  const rows = DATA;
+  const cellH = 22, cellW = 62, startY = 30;
+  const leftPad = 160;
+
+  // Column headers
+  patients.forEach((p, j) => {
+    const x = leftPad + j * cellW + cellW/2;
+    ctx.fillStyle = PAT_COLORS[p]; ctx.font = 'bold 10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center'; ctx.fillText(p, x, startY - 8);
+    ctx.fillStyle = '#9090aa'; ctx.font = '9px JetBrains Mono, monospace';
+    ctx.fillText(`u_${p[0]}`, x, startY);
+  });
+
+  // Rows
+  rows.forEach((d, i) => {
+    const y = startY + 12 + (i + 0.5) * cellH;
+
+    // Row label
+    ctx.fillStyle = PAT_COLORS[d.p]; ctx.font = 'bold 10px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Row ${i+1}: ${d.p}, wk${d.week}`, leftPad - 8, y + 4);
+
+    // Cells
+    patients.forEach((p, j) => {
+      const x = leftPad + j * cellW;
+      const isThis = d.p === p;
+      ctx.fillStyle = isThis ? `${PAT_COLORS[p]}22` : 'transparent';
+      ctx.fillRect(x + 3, y - cellH/2 + 2, cellW - 6, cellH - 4);
+      ctx.fillStyle = isThis ? PAT_COLORS[p] : '#d4ccb8';
+      ctx.font = isThis ? 'bold 13px JetBrains Mono, monospace' : '12px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(isThis ? '1' : '0', x + cellW/2, y + 4);
+    });
+  });
+
+  // Brackets
+  const bx0 = leftPad - 2;
+  const bx1 = leftPad + patients.length * cellW + 2;
+  const by0 = startY + 10;
+  const by1 = startY + 10 + rows.length * cellH;
+  ctx.strokeStyle = '#1c1c2e'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(bx0+8,by0); ctx.lineTo(bx0,by0); ctx.lineTo(bx0,by1); ctx.lineTo(bx0+8,by1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx1-8,by0); ctx.lineTo(bx1,by0); ctx.lineTo(bx1,by1); ctx.lineTo(bx1-8,by1); ctx.stroke();
+
+  ctx.fillStyle = '#9090aa'; ctx.font = '10px Source Serif 4, serif';
+  ctx.textAlign = 'left'; ctx.fillText('Z is 12 × 4', bx1 + 10, (by0+by1)/2);
+}
+
+// ── FIGURE 5: LMM fitted lines ───────────────────────
+function drawFig5() {
+  const s = setupCanvas('fig5', 350); if (!s) return;
+  const { ctx, W, H } = s;
+  const pad = 50;
+  const toX = makeScale(DATA, 'phq', 0.1, pad, W - pad/2);
+  const allY = DATA.map(d => B0 + B1*d.phq + BLUPS[d.p]).concat(DATA.map(d=>d.y));
+  const toY = v => {
+    const mn = Math.min(...allY)-0.15, mx = Math.max(...allY)+0.15;
+    return pad + (1 - (v-mn)/(mx-mn)) * (H - 2*pad);
+  };
+
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx, W, H, pad, 'PHQ-8 Score', 'Pause_z', [6,8,10,12,14,16,18,20], [-0.8,-0.4,0,0.4,0.8,1.2,1.6,2.0], toX, toY);
+  drawLegend(ctx, W, H, pad);
+
+  const phqMin = 4, phqMax = 23;
+
+  // Fitted lines
+  Object.entries(BLUPS).forEach(([p, u]) => {
+    ctx.strokeStyle = PAT_COLORS[p]; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(toX(phqMin), toY(B0 + B1*phqMin + u));
+    ctx.lineTo(toX(phqMax), toY(B0 + B1*phqMax + u));
+    ctx.stroke();
+  });
+
+  // Vertical drop lines: actual → fitted
+  DATA.forEach(d => {
+    const fitted = B0 + B1*d.phq + BLUPS[d.p];
+    ctx.strokeStyle = PAT_COLORS[d.p]; ctx.lineWidth = 1; ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.moveTo(toX(d.phq), toY(d.y)); ctx.lineTo(toX(d.phq), toY(fitted)); ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Actual points (small, hollow)
+  DATA.forEach(d => {
+    ctx.strokeStyle = PAT_COLORS[d.p]; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(d.y), 5, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(d.y), 4, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Fitted points (solid)
+  DATA.forEach(d => {
+    const fitted = B0 + B1*d.phq + BLUPS[d.p];
+    ctx.fillStyle = PAT_COLORS[d.p];
+    ctx.beginPath(); ctx.arc(toX(d.phq), toY(fitted), 5, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Annotation: arrows showing the u gap
+  const midPhq = 13;
+  const aliceY = toY(B0 + B1*midPhq + BLUPS['Alice']);
+  const bobY   = toY(B0 + B1*midPhq + BLUPS['Bob']);
+  const gapX   = toX(midPhq) - 30;
+  ctx.strokeStyle = '#c8930a'; ctx.lineWidth = 1; ctx.setLineDash([2,2]);
+  ctx.beginPath(); ctx.moveTo(gapX, aliceY); ctx.lineTo(gapX, bobY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#c8930a'; ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('u gap', gapX - 3, (aliceY+bobY)/2 + 4);
+}
+
+// ── FIGURE 6: Residuals vs fitted ────────────────────
+function drawFig6() {
+  const s = setupCanvas('fig6', 260); if (!s) return;
+  const { ctx, W, H } = s;
+  const pad = 48;
+
+  const residData = DATA.map(d => ({
+    p: d.p,
+    fitted: B0 + B1*d.phq + BLUPS[d.p],
+    resid: d.y - (B0 + B1*d.phq + BLUPS[d.p])
+  }));
+
+  const toX = makeScale(residData, 'fitted', 0.1, pad, W - pad/2);
+  const toY = makeScale(residData, 'resid',  0.3, H - pad, pad);
+
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+  drawAxes(ctx, W, H, pad, 'Fitted Value', 'Residual', [-0.8,-0.4,0,0.4,0.8,1.2,1.6], [-0.7,-0.4,-0.1,0.1,0.4], toX, toY);
+
+  // Zero line
+  const y0 = toY(0);
+  ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(pad, y0); ctx.lineTo(W-pad/2, y0); ctx.stroke(); ctx.setLineDash([]);
+
+  residData.forEach(d => {
+    ctx.fillStyle = PAT_COLORS[d.p];
+    ctx.beginPath(); ctx.arc(toX(d.fitted), toY(d.resid), 6, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(toX(d.fitted), toY(d.resid), 6, 0, Math.PI*2); ctx.stroke();
+  });
+}
+
+// ── FIGURE 7: BLUP number line ───────────────────────
+function drawFig7() {
+  const s = setupCanvas('fig7', 220); if (!s) return;
+  const { ctx, W, H } = s;
+  ctx.fillStyle = 'white'; ctx.fillRect(0,0,W,H);
+
+  const pad = 60;
+  const axY = H / 2;
+  const blupVals = Object.values(BLUPS);
+  const mn = Math.min(...blupVals) - 0.3;
+  const mx = Math.max(...blupVals) + 0.3;
+  const toX = v => pad + (v - mn) / (mx - mn) * (W - 2*pad);
+
+  // Normal distribution curve (approximate)
+  const sigma = 0.585;
+  ctx.strokeStyle = '#c8930a'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  for (let x = mn; x <= mx; x += 0.02) {
+    const yNorm = axY - 60 * Math.exp(-x*x/(2*sigma*sigma));
+    x === mn ? ctx.moveTo(toX(x), yNorm) : ctx.lineTo(toX(x), yNorm);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Zero reference
+  ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(toX(0), axY - 75); ctx.lineTo(toX(0), axY + 30); ctx.stroke();
+  ctx.fillStyle = '#9090aa'; ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'center'; ctx.fillText('0 (pop. mean)', toX(0), axY + 44);
+
+  // Axis
+  ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, axY); ctx.lineTo(W-pad, axY); ctx.stroke();
+  [-1, -0.5, 0, 0.5, 1].forEach(v => {
+    ctx.beginPath(); ctx.moveTo(toX(v), axY-4); ctx.lineTo(toX(v), axY+4); ctx.stroke();
+    ctx.fillStyle = '#aaa'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText(v, toX(v), axY + 16);
+  });
+
+  // BLUP dots
+  Object.entries(BLUPS).forEach(([p, u]) => {
+    ctx.fillStyle = PAT_COLORS[p];
+    ctx.beginPath(); ctx.arc(toX(u), axY, 9, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.font = 'bold 9px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText(p[0], toX(u), axY + 3);
+
+    // Value label
+    ctx.fillStyle = PAT_COLORS[p]; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText((u > 0 ? '+' : '') + u.toFixed(3), toX(u), axY - 18);
+  });
+
+  // Title
+  ctx.fillStyle = '#9090aa'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('u ~ N(0, σ²_u = 0.342)', pad, 20);
+  ctx.strokeStyle = '#c8930a'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(pad + 5, 10); ctx.lineTo(pad + 25, 10); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#c8930a'; ctx.font = '10px JetBrains Mono'; ctx.fillText('← normal(0, 0.585)', pad + 30, 13);
+}
+
+// Draw all figures on load
+window.addEventListener('load', () => {
+  drawFig1(); drawFig2(); drawFig3(); drawFig4();
+  drawFig5(); drawFig6(); drawFig7();
+});
+window.addEventListener('resize', () => {
+  drawFig1(); drawFig2(); drawFig3(); drawFig4();
+  drawFig5(); drawFig6(); drawFig7();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Independence Problem — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+
+/* ── DATA BLOCK ── */
+.data-block {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  background: var(--ink); color: #ccc;
+  padding: 1.4rem 1.75rem;
+  margin: 1.5rem 0;
+  line-height: 2.1;
+  overflow-x: auto;
+  border-left: 3px solid var(--gold);
+}
+.data-block .rh { color: #f9c74f; }
+.data-block .cm { color: #555; }
+
+/* ── CONSEQUENCE STRIP ── */
+.consequence-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--border);
+  margin: 2rem 0;
+}
+.cs-box { background: white; padding: 1.4rem 1.5rem; }
+.cs-box-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem; font-weight: 700;
+  line-height: 1; margin-bottom: 0.5rem;
+}
+.cs-box-title { font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; font-size: 0.95rem; }
+.cs-box-desc  { font-size: 0.85rem; color: var(--ink-faint); line-height: 1.6; }
+.cs-box.bad  .cs-box-num { color: var(--rust); }
+.cs-box.warn .cs-box-num { color: var(--gold); }
+
+/* ── SIM PANEL ── */
+.sim-panel {
+  background: white;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.sim-canvas-wrap {
+  padding: 1.25rem 1.25rem 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+.sim-controls {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+.sim-result-box {
+  padding: 1rem 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.79rem; line-height: 1.75;
+  min-height: 56px;
+  color: var(--ink-faint);
+  border-left: 4px solid var(--border-dark);
+  transition: border-color 0.3s, background 0.3s;
+}
+.sim-result-box.bad  { border-left-color: var(--rust);  background: rgba(181,69,27,0.05); }
+.sim-result-box.good { border-left-color: var(--teal);  background: rgba(26,107,92,0.05); }
+
+/* ── OPTION GRID ── */
+.option-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--border);
+  margin: 1.5rem 0;
+}
+.option-card { background: white; padding: 1.5rem; }
+.option-card-head {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+.option-letter {
+  flex-shrink: 0; width: 32px; height: 32px;
+  background: var(--paper-dark);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 700; color: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+}
+.option-name { font-weight: 700; font-size: 0.95rem; color: var(--navy); line-height: 1.3; }
+.option-sub  { font-size: 0.75rem; color: var(--ink-ghost); margin-top: 0.15rem; }
+.verdict-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.2rem 0.55rem; display: inline-block; margin-bottom: 0.7rem;
+}
+.verdict-tag.fail    { background: rgba(181,69,27,0.12); color: var(--rust); }
+.verdict-tag.partial { background: rgba(200,147,10,0.12); color: var(--gold); }
+.option-body { font-size: 0.86rem; color: var(--ink-faint); line-height: 1.7; }
+.option-body p { margin: 0 0 0.65rem; }
+.option-body p:last-child { margin-bottom: 0; }
+.option-body strong { color: var(--navy); }
+
+/* ── COMPARISON TABLE ── */
+.compare-table-wrap {
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin: 2rem 0;
+}
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.87rem;
+  min-width: 500px;
+}
+.compare-table colgroup col:first-child { width: 26%; }
+.compare-table colgroup col             { width: 18.5%; }
+.compare-table thead tr { background: var(--navy); }
+.compare-table thead th {
+  padding: 0.65rem 0.8rem;
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.61rem; letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  vertical-align: bottom;
+  line-height: 1.4;
+}
+.compare-table thead th:first-child {
+  text-align: left;
+  border-right: 1px solid rgba(255,255,255,0.18);
+}
+.compare-table thead th:last-child { border-right: none; }
+.compare-table tbody tr { border-bottom: 1px solid var(--border); }
+.compare-table tbody tr:last-child {
+  background: rgba(26,107,92,0.05);
+  border-bottom: none;
+}
+.compare-table tbody tr:hover { background: var(--paper-dark); }
+.compare-table tbody tr:last-child:hover { background: rgba(26,107,92,0.1); }
+.compare-table tbody td {
+  padding: 0.65rem 0.8rem;
+  color: var(--ink-faint);
+  text-align: center;
+  border-right: 1px solid var(--border);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+.compare-table tbody td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  border-right: 1px solid var(--border-dark);
+}
+.compare-table tbody tr:last-child td { color: var(--teal); font-weight: 700; }
+.compare-table tbody td:last-child { border-right: none; }
+.ccheck { color: var(--teal);  font-size: 1.05rem; display: inline-block; }
+.ccross { color: var(--rust);  font-size: 1.05rem; display: inline-block; }
+.cnote  { font-size: 0.72rem; display: block; color: var(--ink-ghost); margin-top: 0.15rem; }
+
+/* ── INSIGHT STRIP ── */
+.insight-strip {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  margin: 1.5rem 0;
+}
+.insight-cell { background: white; padding: 1.25rem 1.5rem; }
+.insight-cell.rust-top { border-top: 3px solid var(--rust); }
+.insight-cell.teal-top { border-top: 3px solid var(--teal); }
+.insight-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-ghost); margin-bottom: 0.4rem;
+}
+.insight-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem; font-weight: 700;
+  line-height: 1; margin-bottom: 0.3rem;
+}
+.insight-cell.rust-top .insight-value { color: var(--rust); }
+.insight-cell.teal-top .insight-value { color: var(--teal); }
+.insight-desc { font-size: 0.85rem; color: var(--ink-faint); line-height: 1.6; }
+
+/* ── SIMPSON PANEL ── */
+.simpson-panel {
+  background: white;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.simpson-canvas-wrap {
+  padding: 1.25rem 1.25rem 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+.simpson-note {
+  padding: 1rem 1.5rem;
+  font-size: 0.87rem;
+  color: var(--ink-faint);
+  line-height: 1.65;
+  min-height: 48px;
+}
+
+@media (max-width: 700px) {
+  .consequence-strip,
+  .option-grid,
+  .insight-strip { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+  <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html" class="active">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="ε ~ N(0, σ²I)">
+    <div class="hero-eyebrow">Chapter 02 · The Problem</div>
+    <h1 class="hero-title">When Your Data<br><em>Lies in Clusters</em></h1>
+    <p class="hero-subtitle">Standard regression has one critical assumption: every observation is <strong>independent</strong>. For repeated-measures data — 100 patients each recorded 26 times — this assumption is catastrophically wrong. Here's exactly what breaks, why it breaks, and what the alternatives miss.</p>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ══ 1. THE ASSUMPTION ══════════════════════════════ -->
+    <div class="section-marker">
+      <div class="sm-num">1</div><div class="sm-line"></div>
+      <div class="sm-label">The Assumption OLS Makes</div>
+    </div>
+
+    <h2>What "independent" actually means — and why it fails</h2>
+
+    <p>OLS assumes residuals are distributed as <strong>N(0, σ²<em>I</em>)</strong>. That bold <strong>I</strong> — the identity matrix — encodes one claim: the covariance between <em>any</em> two residuals is exactly zero. Every row of your dataset is as unrelated to every other as two strangers pulled at random from the population.</p>
+
+    <p>Fine if each row is a different person, measured once. In RADAR-CNS, Patient 7's four rows look like this:</p>
+
+    <div class="data-block">
+<span class="cm"># Patient 7 — four rows, one person</span>
+patient_id  week  phq8  pause_z
+<span class="rh">7           2     14    0.82</span>
+<span class="rh">7           4     16    1.05</span>
+<span class="rh">7           6     11    0.63</span>
+<span class="rh">7           8     17    1.21</span>
+<span class="cm"># OLS treats these as 4 independent people. They are not.</span>
+    </div>
+
+    <p>Patient 7 may simply have a naturally slow speaking style. Their pause lengths will be elevated across <em>all</em> weeks regardless of PHQ-8 — because that's who they are, not because of depression. This creates systematic within-row correlation that OLS cannot model, and treats as signal when it is only identity. Three precise consequences follow:</p>
+
+    <div class="consequence-strip">
+      <div class="cs-box bad">
+        <div class="cs-box-num">5×</div>
+        <div class="cs-box-title">Standard error deflation</div>
+        <div class="cs-box-desc">With ICC = 0.96 and n=26 per patient, OLS underestimates the true SE by roughly √(1 + 25 × 0.96) ≈ <strong>5-fold</strong>. A true SE of 0.50 appears as 0.10.</div>
+      </div>
+      <div class="cs-box bad">
+        <div class="cs-box-num">↑ t</div>
+        <div class="cs-box-title">Inflated t-values</div>
+        <div class="cs-box-desc">Because SE is too small, t = β/SE is too large. A real t of 1.4 (non-significant) gets reported as t = 7.0. The p-value becomes essentially zero — a complete fiction.</div>
+      </div>
+      <div class="cs-box warn">
+        <div class="cs-box-num">≈ OK</div>
+        <div class="cs-box-title">But β is roughly right</div>
+        <div class="cs-box-desc">The coefficient estimate β itself is not badly biased. OLS will estimate roughly the right effect size. The problem is the uncertainty around it — the confidence interval is fictionally narrow.</div>
+      </div>
+    </div>
+
+    <!-- ══ 2. SIMULATION ══════════════════════════════════ -->
+    <div class="section-marker">
+      <div class="sm-num">2</div><div class="sm-line"></div>
+      <div class="sm-label">Live Simulation</div>
+    </div>
+
+    <h2>See it happen: <em>the false positive factory</em></h2>
+    <p>The dataset below has <strong>zero real effect of X on Y</strong> — pure noise, organised into 8 patient groups. Each patient has a random personal baseline but no systematic X→Y relationship. Run OLS to watch it wrongly declare significance. Run LMM to see the correction.</p>
+
+    <div class="sim-panel">
+      <div class="sim-canvas-wrap">
+        <div class="canvas-title">// 8 patients × 8 observations — true β = 0. Grouped noise only.</div>
+        <canvas id="simCanvas" height="280"></canvas>
+      </div>
+      <div class="sim-controls">
+        <button class="ctrl-btn" onclick="genData()">↺ New Dataset</button>
+        <button class="ctrl-btn" onclick="runOLS()">▶ OLS — ignores clustering</button>
+        <button class="ctrl-btn" onclick="runLMM()">▶ LMM — accounts for it</button>
+      </div>
+      <div class="sim-result-box" id="simResult">Press <strong>New Dataset</strong>, then run a model.</div>
+    </div>
+
+    <div class="insight-strip">
+      <div class="insight-cell rust-top">
+        <div class="insight-label">OLS behaviour</div>
+        <div class="insight-value">False positive</div>
+        <div class="insight-desc">OLS fits one line through all 64 points without knowing they come from 8 different patients. Between-patient baseline differences masquerade as an X→Y relationship. Hit <em>New Dataset</em> several times — OLS will repeatedly declare significance even though nothing is real.</div>
+      </div>
+      <div class="insight-cell teal-top">
+        <div class="insight-label">LMM behaviour</div>
+        <div class="insight-value">Correct null</div>
+        <div class="insight-desc">LMM gives each patient their own intercept (coloured dashed lines). The pooled within-patient β (dark solid line) is near zero — as it should be. The group structure is modelled, not confused for signal.</div>
+      </div>
+    </div>
+
+    <!-- ══ 3. ALTERNATIVES ════════════════════════════════ -->
+    <div class="section-marker">
+      <div class="sm-num">3</div><div class="sm-line"></div>
+      <div class="sm-label">Three Simpler Alternatives — and Why Each Fails</div>
+    </div>
+
+    <h2>Why not just do something simpler?</h2>
+    <p>Three alternatives to LMMs are commonly reached for. Each solves part of the problem but breaks something else in the process.</p>
+
+    <div class="option-grid">
+      <div class="option-card">
+        <div class="option-card-head">
+          <div class="option-letter">A</div>
+          <div><div class="option-name">Aggregate</div><div class="option-sub">one row per patient</div></div>
+        </div>
+        <span class="verdict-tag partial">Partial fix</span>
+        <div class="option-body">
+          <p>Average Patient 7's rows into one. Now 100 independent observations — independence satisfied.</p>
+          <p><strong>What breaks:</strong> All within-patient information is gone. You can no longer ask "when Patient 7 feels worse, do their pauses get longer?" You can only ask "do patients who are worse on average also pause more on average?" — a fundamentally weaker, different question that can be confounded by stable personality differences rather than depression itself.</p>
+          <p>You also discard 96% of your data: 2,600 rows → 100.</p>
+        </div>
+      </div>
+      <div class="option-card">
+        <div class="option-card-head">
+          <div class="option-letter">B</div>
+          <div><div class="option-name">Separate models</div><div class="option-sub">one regression per patient</div></div>
+        </div>
+        <span class="verdict-tag partial">Partial fix</span>
+        <div class="option-body">
+          <p>Fit 100 separate regressions, one per patient, using only that patient's 26 rows.</p>
+          <p><strong>What breaks:</strong> Each model has n=26 — extremely noisy estimates. You end up with 100 different β values with no principled way to combine them into a single, publishable answer about people with MDD in general.</p>
+          <p><strong>The insight:</strong> LMM is a principled version of this idea — it fits per-patient intercepts while pooling the slope estimate towards a shared population value. It does what you were trying to do, correctly.</p>
+        </div>
+      </div>
+      <div class="option-card">
+        <div class="option-card-head">
+          <div class="option-letter">C</div>
+          <div><div class="option-name">Ignore clustering</div><div class="option-sub">OLS on all 2,600 rows</div></div>
+        </div>
+        <span class="verdict-tag fail">Dangerous</span>
+        <div class="option-body">
+          <p>Run one OLS on all rows. The β may be roughly correct — but the standard error will be too small, because OLS believes you have 2,600 independent observations rather than 100 independent patients.</p>
+          <p><strong>What breaks:</strong> t-values are inflated. A t of 2.5 looks significant — accounting for clustering, the correct t might be 1.4. You publish a finding that does not exist.</p>
+          <p>In the Cummins et al. (2023) RADAR-MDD paper, several pause features found "significant" in earlier studies using inadequate methods became non-significant once proper LMMs were fitted. Those prior results were false positives.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <colgroup><col><col><col><col><col></colgroup>
+        <thead>
+          <tr>
+            <th>Approach</th>
+            <th>Independence<br>satisfied?</th>
+            <th>Within-patient<br>signal retained?</th>
+            <th>Full data<br>used?</th>
+            <th>Population-level<br>inference?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OLS — naïve</td>
+            <td><span class="ccross">✗</span><span class="cnote">SEs wrong</span></td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+          </tr>
+          <tr>
+            <td>Aggregate</td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccross">✗</span><span class="cnote">Lost entirely</span></td>
+            <td><span class="ccross">✗</span><span class="cnote">96% discarded</span></td>
+            <td><span class="ccheck">✓</span></td>
+          </tr>
+          <tr>
+            <td>Separate models</td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccross">✗</span><span class="cnote">Per patient only</span></td>
+            <td><span class="ccross">✗</span><span class="cnote">No pooling</span></td>
+          </tr>
+          <tr>
+            <td>LMM ✓</td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+            <td><span class="ccheck">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══ 4. SIMPSON'S PARADOX ══════════════════════════ -->
+    <div class="section-marker">
+      <div class="sm-num">4</div><div class="sm-line"></div>
+      <div class="sm-label">Simpson's Paradox</div>
+    </div>
+
+    <h2>When the overall trend points the <em>wrong direction</em></h2>
+    <p>This is the most striking demonstration of what goes wrong when clustering is ignored. In the chart below, the naïve OLS trend says pause length <em>increases</em> over sessions. The within-patient reality is the complete opposite: every single patient's pause length <em>decreases</em> over time as they improve. The apparent positive trend is a statistical illusion caused by sicker patients (higher baselines) coincidentally having more sessions — a confound that OLS cannot see, but LMM dissolves immediately by giving each patient their own intercept.</p>
+
+    <div class="simpson-panel">
+      <div class="simpson-canvas-wrap">
+        <div class="canvas-title">// Simpson's Paradox — same points, two completely different interpretations</div>
+        <canvas id="simpsonCanvas" height="300"></canvas>
+      </div>
+      <div class="sim-controls">
+        <button class="ctrl-btn active" id="spBtn1" onclick="showSimpson('between')">OLS — naïve overall trend</button>
+        <button class="ctrl-btn" id="spBtn2" onclick="showSimpson('within')">LMM — within-patient truth</button>
+      </div>
+      <div class="simpson-note" id="spNote">
+        The red line is what OLS sees when it ignores patient identity. Click <strong>LMM — within-patient truth</strong> to reveal what is actually happening inside each patient.
+      </div>
+    </div>
+
+    <div class="callout navy" style="margin-top:3rem;">
+      <div class="callout-label">Next: The Math</div>
+      <p>You now understand <em>why</em> LMMs are necessary. The next chapter builds the X matrix, Z matrix, and u vector from actual patient data — every cell, step by step. <a href="math.html" style="color:var(--gold);">The Math →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · The Independence Problem · Chapter 02</p></footer>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+const PAT_COLS = ['#5b3a8a','#1a6b5c','#b5451b','#1a2744','#c8930a','#2980b9','#7b241c','#1a5276'];
+
+function setupC(id, h) {
+  const c = document.getElementById(id); if (!c) return null;
+  const parent = c.parentElement;
+  const W = parent.clientWidth - 40;
+  c.width = W*DPR; c.height = h*DPR;
+  c.style.width = W+'px'; c.style.height = h+'px';
+  const ctx = c.getContext('2d'); ctx.scale(DPR,DPR);
+  ctx.clearRect(0,0,W,h);
+  return {ctx,W,H:h};
+}
+
+function getRange(data, key, margin=0.12) {
+  const vals = data.map(d=>d[key]);
+  const mn=Math.min(...vals), mx=Math.max(...vals);
+  const p = (mx-mn)*margin || 0.5;
+  return [mn-p, mx+p];
+}
+
+function toXY(x,y,xR,yR,W,H,pad) {
+  return [pad+(x-xR[0])/(xR[1]-xR[0])*(W-2*pad),
+          H-pad-(y-yR[0])/(yR[1]-yR[0])*(H-2*pad)];
+}
+
+function axes(ctx,W,H,pad,xl,yl) {
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+  ctx.fillStyle='#aaa'; ctx.font='10px Source Serif 4,serif'; ctx.textAlign='center';
+  if(xl) ctx.fillText(xl,W/2,H-4);
+  if(yl){ctx.save();ctx.translate(13,H/2);ctx.rotate(-Math.PI/2);ctx.fillText(yl,0,0);ctx.restore();}
+}
+
+function linReg(pts) {
+  const n=pts.length; if(n<2) return {a:0,b:0,t:0};
+  const mx=pts.reduce((s,p)=>s+p.x,0)/n, my=pts.reduce((s,p)=>s+p.y,0)/n;
+  let num=0,den=0;
+  pts.forEach(p=>{num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)**2;});
+  const b=den?num/den:0, a=my-b*mx;
+  const sse=pts.reduce((s,p)=>s+(p.y-(a+b*p.x))**2,0);
+  const t=b/(Math.sqrt(sse/(n-2)/den)||1);
+  return{a,b,t};
+}
+
+/* ── SIMULATION ─── */
+let simData=[], olsR=null, lmmR=null;
+const NP=8,NO=8;
+
+function genData(){
+  simData=[];
+  for(let p=0;p<NP;p++){
+    const ic=(Math.random()-0.5)*6;
+    for(let o=0;o<NO;o++){
+      simData.push({p,x:(o/(NO-1))*5-1,y:ic+(Math.random()-0.5)*1.5});
+    }
+  }
+  olsR=null; lmmR=null;
+  document.getElementById('simResult').textContent='Dataset generated — run a model.';
+  document.getElementById('simResult').className='sim-result-box';
+  drawSim();
+}
+
+function drawSim(ols,lmm){
+  const s=setupC('simCanvas',280); if(!s)return;
+  const{ctx,W,H}=s, pad=44;
+  const xR=getRange(simData,'x'), yR=getRange(simData,'y');
+  const tc=(x,y)=>toXY(x,y,xR,yR,W,H,pad);
+
+  axes(ctx,W,H,pad,'Predictor X  (e.g. PHQ-8)','Outcome Y  (e.g. pause_z)');
+
+  // tick values
+  ctx.fillStyle='#aaa'; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='center';
+  [-1,0,1,2,3,4].forEach(v=>{if(v>=xR[0]&&v<=xR[1]) ctx.fillText(v,tc(v,yR[0])[0],H-pad+12);});
+
+  simData.forEach(d=>{
+    const [px,py]=tc(d.x,d.y);
+    ctx.fillStyle=PAT_COLS[d.p];
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();
+  });
+
+  if(ols){
+    ctx.strokeStyle='#b5451b';ctx.lineWidth=2.5;ctx.setLineDash([]);
+    const[x1,y1]=tc(xR[0],ols.a+ols.b*xR[0]);
+    const[x2,y2]=tc(xR[1],ols.a+ols.b*xR[1]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.fillStyle='#b5451b';ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('OLS line (wrong)',x1+6,y1-8);
+  }
+
+  if(lmm){
+    lmm.forEach((ln,i)=>{
+      ctx.strokeStyle=PAT_COLS[i];ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+      const[x1,y1]=tc(xR[0],ln.a+ln.b*xR[0]);
+      const[x2,y2]=tc(xR[1],ln.a+ln.b*xR[1]);
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    const aA=lmm.reduce((s,l)=>s+l.a,0)/lmm.length;
+    const aB=lmm.reduce((s,l)=>s+l.b,0)/lmm.length;
+    ctx.strokeStyle='#1a2744';ctx.lineWidth=2.5;
+    const[x1,y1]=tc(xR[0],aA+aB*xR[0]);
+    const[x2,y2]=tc(xR[1],aA+aB*xR[1]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.fillStyle='#1a2744';ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='right';
+    ctx.fillText('LMM pooled β',x2-6,y2-8);
+  }
+
+  // legend strip
+  const lw=(W-2*pad)/NP;
+  PAT_COLS.forEach((col,i)=>{
+    const lx=pad+i*lw+lw/2;
+    ctx.fillStyle=col;ctx.fillRect(lx-10,H-pad+16,12,8);
+    ctx.fillStyle='#9090aa';ctx.font='9px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText(`P${i+1}`,lx+4,H-pad+24);
+  });
+}
+
+function runOLS(){
+  if(!simData.length)genData();
+  olsR=linReg(simData);
+  const sig=Math.abs(olsR.t)>2;
+  drawSim(olsR,null);
+  const el=document.getElementById('simResult');
+  el.className='sim-result-box'+(sig?' bad':'');
+  el.innerHTML=sig
+    ?`OLS: β = ${olsR.b.toFixed(3)}, t = ${olsR.t.toFixed(2)} → <strong>p &lt; 0.05 ⚠ FALSE POSITIVE.</strong> True β = 0. OLS treats ${NP*NO} rows as ${NP*NO} independent people. The between-patient spread masquerades as a slope.`
+    :`OLS: β = ${olsR.b.toFixed(3)}, t = ${olsR.t.toFixed(2)} → Not significant this run — but the method is still wrong. Hit <strong>New Dataset</strong> repeatedly to see false positives appear regularly.`;
+}
+
+function runLMM(){
+  if(!simData.length)genData();
+  lmmR=Array.from({length:NP},(_,p)=>linReg(simData.filter(d=>d.p===p)));
+  const aB=lmmR.reduce((s,l)=>s+l.b,0)/NP;
+  drawSim(null,lmmR);
+  const el=document.getElementById('simResult');
+  el.className='sim-result-box good';
+  el.innerHTML=`LMM: each patient gets their own intercept (dashed coloured lines). Pooled within-patient β ≈ <strong>${aB.toFixed(3)}</strong> — near zero, correct. Individual baseline offsets are absorbed into the random effects and no longer inflate the slope.`;
+}
+
+genData();
+
+/* ── SIMPSON'S PARADOX ─── */
+const SP_COLS=['#5b3a8a','#1a6b5c','#b5451b','#1a2744','#c8930a','#2980b9'];
+const spData=[];
+(()=>{
+  SP_COLS.forEach((_,i)=>{
+    const base=3.8-i*0.38;
+    const rng=(s)=>{let v=s;return()=>{v=(v*16807)%2147483647;return(v-1)/2147483646-0.5;}};
+    const r=rng(i*137+1);
+    for(let j=0;j<8;j++) spData.push({x:j+1,y:base-j*0.09+r()*0.18,p:i});
+  });
+})();
+let spMode='between';
+
+function showSimpson(mode){
+  spMode=mode;
+  const s=setupC('simpsonCanvas',300); if(!s)return;
+  const{ctx,W,H}=s, pad=44;
+  const xR=[0,9], yR=[0.8,4.8];
+  const tc=(x,y)=>toXY(x,y,xR,yR,W,H,pad);
+
+  axes(ctx,W,H,pad,'Session number','Pause length (z)');
+  // x ticks
+  ctx.fillStyle='#aaa';ctx.font='9px JetBrains Mono';ctx.textAlign='center';
+  [1,2,3,4,5,6,7,8].forEach(v=>ctx.fillText(v,tc(v,yR[0])[0],H-pad+12));
+
+  spData.forEach(d=>{
+    const[px,py]=tc(d.x,d.y);
+    ctx.fillStyle=SP_COLS[d.p];
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();
+  });
+
+  if(mode==='between'){
+    const{a,b}=linReg(spData);
+    ctx.strokeStyle='#b5451b';ctx.lineWidth=2.5;ctx.setLineDash([]);
+    const[x1,y1]=tc(0.5,a+b*0.5);
+    const[x2,y2]=tc(8.5,a+b*8.5);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.fillStyle='#b5451b';ctx.font='bold 10px Source Serif 4,serif';ctx.textAlign='center';
+    ctx.fillText('OLS: pause ↑ over sessions (wrong)',W/2,pad+16);
+    document.getElementById('spNote').innerHTML=
+      '<strong>OLS sees a rising trend</strong> — later sessions, higher pause lengths. But this is because sicker patients (upper-left clusters, higher baselines) coincidentally have more recorded sessions. It is a confound, not a real within-person trajectory.';
+    document.getElementById('spBtn1').classList.add('active');
+    document.getElementById('spBtn2').classList.remove('active');
+  } else {
+    SP_COLS.forEach((_,p)=>{
+      const pts=spData.filter(d=>d.p===p);
+      const{a,b}=linReg(pts);
+      ctx.strokeStyle=SP_COLS[p];ctx.lineWidth=2;ctx.setLineDash([5,3]);
+      const[x1,y1]=tc(0.7,a+b*0.7);
+      const[x2,y2]=tc(8.3,a+b*8.3);
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.fillStyle='#1a6b5c';ctx.font='bold 10px Source Serif 4,serif';ctx.textAlign='center';
+    ctx.fillText('LMM: each patient\'s pause ↓ over sessions (correct truth)',W/2,pad+16);
+    document.getElementById('spNote').innerHTML=
+      '<strong>Within each patient</strong> (each coloured dashed line), pause length decreases over sessions — patients improve. LMM gives each patient their own intercept, recovering the true within-person trend that OLS completely inverted.';
+    document.getElementById('spBtn2').classList.add('active');
+    document.getElementById('spBtn1').classList.remove('active');
+  }
+}
+
+showSimpson('between');
+window.addEventListener('resize',()=>{drawSim(olsR,lmmR||null);showSimpson(spMode);});
+</script>
+</body>
+</html>

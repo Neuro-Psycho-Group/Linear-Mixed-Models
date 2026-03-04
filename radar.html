@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RADAR-CNS Pipeline — LMM Mastery</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .pipe-detail-box h3 { margin-top: 0; }
+  .pipe-detail-box .lmm-eq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    background: var(--ink); color: #ccc;
+    padding: 1.25rem 1.75rem;
+    line-height: 2; margin: 1rem 0;
+  }
+  .pipe-detail-box .lmm-eq .c-key { color: #76d7c4; }
+  .pipe-detail-box .lmm-eq .c-val { color: #f9c74f; }
+  .pipe-detail-box .lmm-eq .c-com { color: #555; }
+  .why-box {
+    background: rgba(26,39,68,0.06);
+    border-left: 3px solid var(--navy);
+    padding: 1rem 1.25rem; margin-top: 1rem;
+  }
+  .why-box-title { font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--navy); margin-bottom:0.5rem; }
+  .why-box p { font-size:0.88rem; color:var(--ink-faint); margin:0; line-height:1.65; }
+  .lmm-step-badge {
+    display:inline-block;
+    background:var(--teal); color:white;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.6rem; letter-spacing:0.12em;
+    padding:0.2rem 0.6rem; text-transform:uppercase;
+    margin-bottom:0.75rem;
+  }
+  .finding-card {
+    background:var(--paper); border:1px solid var(--border);
+    padding:1.25rem; margin:0.75rem 0;
+  }
+  .finding-card .fc-feature { font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--navy); margin-bottom:0.4rem; }
+  .finding-card .fc-result { font-size:0.88rem; color:var(--ink-faint); line-height:1.6; }
+  .finding-card .fc-badge {
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:0.62rem;
+    padding:0.15rem 0.5rem; margin-top:0.4rem;
+  }
+  .fc-sig { background:rgba(26,107,92,0.15); color:var(--teal); }
+  .fc-ns  { background:rgba(181,69,27,0.12); color:var(--rust); }
+  .summary-grid {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:1px; background:var(--border);
+    margin:2rem 0;
+  }
+  .summary-cell {
+    background:white; padding:1.5rem;
+    text-align:center;
+  }
+  .summary-cell .sc-num {
+    font-family:'Cormorant Garamond',serif;
+    font-size:2.8rem; font-weight:700;
+    color:var(--navy); line-height:1;
+  }
+  .summary-cell .sc-label {
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.65rem; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--ink-ghost);
+    margin-top:0.4rem;
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html" class="nav-brand"><span>LMM</span> · Mastery</a>
+    <div class="nav-links">
+    <a href="history.html">History</a>
+    <a href="problem.html">The Problem</a>
+    <a href="data-types.html">Data Types</a>
+    <a href="math.html">The Math</a>
+    <a href="applications.html">Applications</a>
+    <a href="radar.html" class="active">RADAR-CNS</a>
+    <a href="example.html">Worked Example</a>
+    <a href="glmm.html">GLMM</a>
+    <a href="paper.html">Paper Dissection</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div class="page-hero" data-equation="PHQ-8 → Pause_z">
+    <div class="hero-eyebrow">Chapter 04 · Application</div>
+    <h1 class="hero-title">RADAR-CNS:<br><em>Depression</em><br>from Voice</h1>
+    <p class="hero-subtitle">The complete five-phase pipeline — from raw smartphone audio to a clinically validated vocal biomarker. Click each phase to understand what it does and, critically, <strong>why LMM in Phase 4 is not optional</strong>.</p>
+  </div>
+
+  <div class="content-wide">
+
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="sc-num">100</div><div class="sc-label">Patients (MDD)</div></div>
+      <div class="summary-cell"><div class="sc-num">~26</div><div class="sc-label">Timepoints / Patient</div></div>
+      <div class="summary-cell"><div class="sc-num">88</div><div class="sc-label">Acoustic Features (eGeMAPS)</div></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="pipe-row" id="pipelineRow">
+      <div class="pipe-step" onclick="showPipe(0)" data-idx="0">
+        <div class="pipe-step-num">Phase 01</div>
+        <div class="pipe-step-icon">🎙️</div>
+        <div class="pipe-step-name">Collection</div>
+      </div>
+      <div class="pipe-step" onclick="showPipe(1)" data-idx="1">
+        <div class="pipe-step-num">Phase 02</div>
+        <div class="pipe-step-icon">🔧</div>
+        <div class="pipe-step-name">Preprocessing</div>
+      </div>
+      <div class="pipe-step" onclick="showPipe(2)" data-idx="2">
+        <div class="pipe-step-num">Phase 03</div>
+        <div class="pipe-step-icon">📊</div>
+        <div class="pipe-step-name">Features</div>
+      </div>
+      <div class="pipe-step active" onclick="showPipe(3)" data-idx="3" style="background:var(--teal);">
+        <div class="pipe-step-num" style="color:rgba(255,255,255,0.6);">Phase 04</div>
+        <div class="pipe-step-icon">📐</div>
+        <div class="pipe-step-name" style="color:white;">LMM ← Start Here</div>
+      </div>
+      <div class="pipe-step" onclick="showPipe(4)" data-idx="4">
+        <div class="pipe-step-num">Phase 05</div>
+        <div class="pipe-step-icon">🤖</div>
+        <div class="pipe-step-name">ML Model</div>
+      </div>
+    </div>
+
+    <div class="pipe-detail-box" id="pipeDetail">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- WHY LMM IS NON-OPTIONAL -->
+    <div class="section-marker"><div class="sm-num">★</div><div class="sm-line"></div><div class="sm-label">The Central Argument</div></div>
+
+    <h2>Why LMM, specifically, in <em>Phase 4</em>?</h2>
+    <p>This is the question you need to be able to answer in a seminar or interview. Here's the complete argument:</p>
+
+    <div class="acc">
+      <div class="acc-head" onclick="toggleAcc(this)"><span>1. Your data has within-patient correlation — OLS p-values are meaningless</span><span class="acc-icon">+</span></div>
+      <div class="acc-body">
+        <p>With 100 patients × 26 timepoints = 2,600 rows, OLS thinks you have 2,600 independent data points. You have 100 independent units. The effective sample size for testing your PHQ-8 coefficient is somewhere between 100 and 2,600, depending on the ICC. OLS gives you the 2,600 version — massively inflated degrees of freedom, far too small standard errors, false positives everywhere.</p>
+        <p>The ICC for acoustic features in longitudinal voice data is typically 0.3–0.6. At ICC = 0.5, the design effect is approximately 1 + (n_per_group − 1) × ICC = 1 + 25 × 0.5 = 13.5. This means OLS standard errors are off by a factor of √13.5 ≈ 3.7. A t-value of 3.7 in OLS could be a real t-value of 1.0 — totally non-significant.</p>
+      </div>
+    </div>
+
+    <div class="acc">
+      <div class="acc-head" onclick="toggleAcc(this)"><span>2. Delta normalisation requires accounting for individual baselines</span><span class="acc-icon">+</span></div>
+      <div class="acc-body">
+        <p>You've Z-scored each patient's features relative to their own first few sessions. This delta normalisation converts absolute acoustic values (Alice talks slowly) to within-patient deviation (Alice is talking slower than her personal average). The LMM random intercept is the statistical formalisation of exactly this logic: u_Alice estimates Alice's personal baseline, which the fixed effects then operate on top of.</p>
+        <p>Using LMM without delta normalisation, or delta normalisation without LMM, are both partial solutions. Together, they ensure that the PHQ-8 coefficient β₁ captures truly within-person change in voice, not between-person baseline differences.</p>
+      </div>
+    </div>
+
+    <div class="acc">
+      <div class="acc-head" onclick="toggleAcc(this)"><span>3. Missing data is guaranteed — LMM handles it; ANOVA doesn't</span><span class="acc-icon">+</span></div>
+      <div class="acc-body">
+        <p>Patients in a year-long study will miss sessions. You will have unbalanced data. Repeated-measures ANOVA requires complete data (or listwise deletion, which wastes data and introduces bias). LMM via REML uses all available data for each patient and handles missing timepoints gracefully, because it's modelling the underlying trajectory rather than requiring specific timepoints to be present.</p>
+      </div>
+    </div>
+
+    <div class="acc">
+      <div class="acc-head" onclick="toggleAcc(this)"><span>4. You get scientifically interpretable estimates, not just predictions</span><span class="acc-icon">+</span></div>
+      <div class="acc-body">
+        <p>The ML model in Phase 5 will predict depression state. But it won't tell you <em>why</em> — which acoustic features matter, and how much, in human-understandable units. The LMM Phase 4 provides exactly that: "For every 1-point increase in PHQ-8, pause duration increases by 0.08 SD above personal baseline (95% CI: 0.05–0.11, p &lt; 0.001)." That's a validated biomarker claim. That's publishable science. ML predictions without this statistical foundation are a black box without clinical credibility.</p>
+      </div>
+    </div>
+
+    <div class="callout gold" style="margin-top:3rem;">
+      <div class="callout-label">You now understand the full pipeline</div>
+      <p>Downsampling → VAD → Feature extraction → Delta normalisation → LMM (statistical validation) → ML classification. Every step has a specific statistical rationale. The LMM step is where you prove the science. The ML step is where you build the tool. Without Phase 4, Phase 5 is scientifically indefensible.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer class="site-footer"><p>Linear Mixed Models · RADAR-CNS Application · Chapter 04 of 04</p></footer>
+
+<script>
+function toggleAcc(h) { h.classList.toggle('open'); h.nextElementSibling.classList.toggle('open'); }
+
+const pipeData = [
+  {
+    badge: null,
+    title: 'Phase 1: Data Collection In The Wild',
+    body: `
+      <p>100 patients with a confirmed diagnosis of Major Depressive Disorder install a smartphone app. Every two weeks for a year, the app prompts each patient to read a standard passage of text aloud (scripted speech — removes content variability) and to complete the PHQ-8 questionnaire (8 questions, score 0–24, clinical gold standard for depression severity).</p>
+      <p>Theoretical maximum: 100 patients × 26 sessions = 2,600 rows. In practice, patients miss sessions. The dataset is <strong>unbalanced</strong> — this matters for method choice later.</p>
+      <p>Each row of data: <code>patient_id, session_number, date, phq8_score, audio_file_path</code>.</p>
+      <div class="why-box"><div class="why-box-title">Why this matters for LMM</div><p>The same 100 patients are measured 26 times each. Their rows are not independent — and the dataset is unbalanced from dropout. Both facts make LMM (rather than ANOVA or OLS) the correct tool.</p></div>
+    `
+  },
+  {
+    badge: null,
+    title: 'Phase 2: Preprocessing',
+    body: `
+      <p>Raw smartphone audio is noisy — recording environments vary wildly. A standardised preprocessing chain is applied:</p>
+      <p><strong>Step 1 — Downsampling to 16 kHz:</strong> All devices record at different sample rates. 16 kHz is sufficient for speech (human speech is &lt;8 kHz by Nyquist). Standardises across the cohort.</p>
+      <p><strong>Step 2 — Voice Activity Detection (VAD):</strong> A VAD algorithm scans the audio and removes non-speech segments — background noise, dog barks, door slams, silences. What remains is clean speech frames only.</p>
+      <p><strong>Step 3 — Delta normalisation:</strong> For each patient, use their first 2–3 sessions to establish a personal baseline (mean and SD for each feature). All subsequent sessions are expressed as <strong>Z-scores relative to that personal baseline</strong>. This converts "Alice's pause duration is 0.48 s" into "Alice is pausing 1.2 SD longer than her own average" — a within-person deviation score.</p>
+
+      <div class="why-box" style="background:rgba(200,147,10,0.08); border-left-color:var(--gold);">
+        <div class="why-box-title" style="color:var(--gold);">What is pause_z — and is the "z" the same z as in Y = Xβ + Zu + ε?</div>
+        <p><strong>No — completely different z's.</strong> The subscript <em>z</em> in <code>pause_z</code> stands for <strong>Z-score</strong>: how many standard deviations a value sits from a reference mean. It has nothing to do with the matrix Z in the LMM equation.</p>
+        <p style="margin-top:0.6rem;">A Z-score of a value x is: <em>(x − mean) / SD</em>. In RADAR, the mean and SD are computed <em>per patient</em> from their own baseline sessions — not from the whole cohort. So pause_z for Alice at session 8 means: "(Alice's pause duration at session 8 − Alice's own average pause duration) ÷ Alice's own SD." A value of +1.5 means she is pausing 1.5 of her own standard deviations longer than her personal norm.</p>
+        <p style="margin-top:0.6rem;">The <strong>Z matrix</strong> in Y = Xβ + <strong>Z</strong>u + ε is entirely unrelated — it is the random-effects design matrix, a routing table that maps each observation row to the correct patient's random intercept u. Named Z by historical convention in the mixed-models literature. Two different Z's from two different traditions, meeting in the same analysis by coincidence of notation.</p>
+        <p style="margin-top:0.6rem;"><strong>Why this matters for Dr Cummins's work at KCL:</strong> In the RADAR-MDD paper (Cummins et al., 2023), features were standardised before LMM fitting — mean 0, SD 1 — which is a cohort-level Z-score, applied after the per-patient delta normalisation. Understanding this two-stage standardisation (personal baseline → cohort standardisation) is essential for correctly interpreting the β coefficients the LMMs return: they are in units of "per 1 SD of that feature across the whole cohort."</p>
+      </div>
+      <div class="why-box"><div class="why-box-title">The link to LMM</div><p>Delta normalisation is the pre-processing analogue of the LMM random intercept. Both remove between-patient baseline differences so you can see within-patient change. LMM does this statistically inside the model; delta normalisation does it to the features before modelling. Together they are complementary: delta normalisation makes features comparable across patients; LMM then correctly handles the repeated-measures correlation of those normalised features.</p></div>
+    `
+  },
+  {
+    badge: null,
+    title: 'Phase 3: Acoustic Feature Extraction',
+    body: `
+      <p>Python libraries (<code>Parselmouth</code> for Praat-based features, <code>librosa</code> for spectral features) extract the <strong>eGeMAPS</strong> feature set from each clean speech segment.</p>
+      <p>eGeMAPS (extended Geneva Minimalistic Acoustic Parameter Set) is a standardised set of 88 acoustic features selected specifically for emotion and mental state research:</p>
+      <ul style="font-size:0.9rem; color:var(--ink-faint); margin:0.75rem 0 0.75rem 1.5rem; line-height:1.9;">
+        <li><strong>Frequency features:</strong> F0 (fundamental frequency / pitch), jitter (cycle-to-cycle variation in F0)</li>
+        <li><strong>Energy features:</strong> Shimmer (amplitude variation), loudness, HNR (harmonics-to-noise ratio)</li>
+        <li><strong>Spectral features:</strong> MFCC (mel-frequency cepstral coefficients), spectral slope, formant frequencies</li>
+        <li><strong>Temporal features:</strong> Pause rate, pause duration, speech rate, voice quality measures</li>
+      </ul>
+      <p>After delta normalisation, you have a dataset of shape ~2,600 × 92 (88 features + patient_id, session, phq8, date).</p>
+      <div class="why-box"><div class="why-box-title">Setting up for LMM</div><p>You now have your outcome variable (each of the 88 delta-normalised feature Z-scores) and your predictor (PHQ-8). Before running any machine learning on these features, you need to know: do these features actually covary with depression? Phase 4 answers that.</p></div>
+    `
+  },
+  {
+    badge: 'LMM Phase',
+    title: 'Phase 4: Statistical Validation with Linear Mixed Models',
+    body: `
+      <div class="lmm-step-badge">★ This is where LMM lives</div>
+      <p>Before any machine learning, the researchers run one LMM per acoustic feature to test whether it is a statistically valid correlate of depression severity. For each of the 88 features:</p>
+      <div class="lmm-eq">
+        <span class="c-com"># For each of the 88 acoustic features:</span><br>
+        feature_z ~ <span class="c-val">phq8</span> + <span class="c-val">session_number</span> + (<span class="c-key">1</span> | patient_id)<br><br>
+        <span class="c-com"># Fixed effects:</span><br>
+        <span class="c-com">#   phq8          → does depression severity predict the feature?</span><br>
+        <span class="c-com">#   session_number → control for time/learning effects</span><br>
+        <span class="c-com"># Random effect:</span><br>
+        <span class="c-com">#   (1|patient_id) → each patient has their own baseline voice</span>
+      </div>
+      <p>The key output is the fixed effect coefficient for PHQ-8: <strong>β_phq8</strong>. If this is significantly different from zero (|t| > 2, or using lmerTest for exact p-values), the feature is a valid vocal biomarker for depression severity.</p>
+      <h3 style="margin-top:1.5rem;">Example findings</h3>
+      <div class="finding-card">
+        <div class="fc-feature">Pause Duration (delta-normalised)</div>
+        <div class="fc-result">β = +0.081 per PHQ-8 point (95% CI: 0.046–0.116, t = 4.5). As depression worsens, patients pause longer relative to their personal baseline. Controls for individual variation in natural speaking pace.</div>
+        <span class="fc-badge fc-sig">✓ Significant biomarker p &lt; 0.001</span>
+      </div>
+      <div class="finding-card">
+        <div class="fc-feature">Mean F0 (fundamental frequency, delta-normalised)</div>
+        <div class="fc-result">β = −0.034 per PHQ-8 point (95% CI: −0.071–0.003, t = −1.8). Small negative trend but confidence interval crosses zero. Not significant after correction.</div>
+        <span class="fc-badge fc-ns">✗ Not significant after multiple comparison correction</span>
+      </div>
+      <div class="finding-card">
+        <div class="fc-feature">Speech Rate (syllables/second, delta-normalised)</div>
+        <div class="fc-result">β = −0.065 per PHQ-8 point (95% CI: −0.098–−0.032, t = −3.8). Worsening depression associated with slower speech relative to personal baseline.</div>
+        <span class="fc-badge fc-sig">✓ Significant biomarker p &lt; 0.001</span>
+      </div>
+      <div class="why-box" style="margin-top:1.5rem;"><div class="why-box-title">Why not just correlate features with PHQ-8?</div><p>A simple correlation between pause_z and phq8 would ignore clustering and give wrong standard errors — false positives. The LMM correctly accounts for the repeated-measures structure, gives unbiased variance estimates via REML, and handles missing sessions. The p-value from the LMM is the one you can actually trust and publish.</p></div>
+    `
+  },
+  {
+    badge: null,
+    title: 'Phase 5: Machine Learning Classification',
+    body: `
+      <p>Using only the features validated in Phase 4 (significant LMM results), the team builds a predictive model. The task: given today's voice sample, predict whether the patient is in remission (PHQ-8 &lt; 10) or experiencing moderate-to-severe depression (PHQ-8 ≥ 10) — without the patient needing to fill out the questionnaire.</p>
+      <p><strong>Critical methodological requirement — subject-independent splits:</strong> The test set must contain patients the model has <em>never seen</em> during training. Standard k-fold cross-validation would leak patient identity and massively overestimate generalisation performance. You must split at the patient level.</p>
+      <div class="lmm-eq">
+        <span class="c-com"># Subject-independent cross-validation</span><br>
+        <span class="c-com"># WRONG: random 80/20 split of all 2,600 rows</span><br>
+        <span class="c-com"># RIGHT: 80 training patients / 20 test patients</span><br><br>
+        Classifier: Random Forest or SVM<br>
+        Input: delta-normalised eGeMAPS features (validated by LMM)<br>
+        Output: P(patient in moderate/severe depression state)
+      </div>
+      <p>The result: a model that can flag when a patient has likely transitioned into a worse depression state, prompting clinical outreach — without requiring them to actively self-report.</p>
+      <div class="why-box"><div class="why-box-title">LMM and ML are complementary, not competing</div><p>LMM (Phase 4) provides <em>scientific credibility</em> — "this feature statistically predicts depression, here's the effect size and CI, controlling for individual differences." ML (Phase 5) provides <em>practical utility</em> — "here's a tool that can flag patients in real time." You need both. ML without LMM validation is a black box. LMM without ML gives you science but not a clinical tool.</p></div>
+    `
+  }
+];
+
+function showPipe(idx) {
+  document.querySelectorAll('.pipe-step').forEach((el, i) => {
+    const isLMM = i === 3;
+    if(i === idx) {
+      el.style.background = isLMM ? 'var(--teal)' : 'var(--navy)';
+      el.querySelectorAll('.pipe-step-num,.pipe-step-name').forEach(c=>c.style.color='white');
+    } else {
+      el.style.background = isLMM ? 'rgba(26,107,92,0.25)' : '';
+      el.querySelectorAll('.pipe-step-num,.pipe-step-name').forEach(c=>c.style.color='');
+    }
+  });
+  const d = pipeData[idx];
+  document.getElementById('pipeDetail').innerHTML = `
+    ${d.badge ? `<div class="lmm-step-badge">★ LMM Phase</div>` : ''}
+    <h3>${d.title}</h3>
+    ${d.body}
+  `;
+}
+showPipe(3);
+</script>
+</body>
+</html>
